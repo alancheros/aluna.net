@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Aluna.test/Aluna.test.csproj" />
+  </Folder>
+  <Project Path="Aluna.net/Aluna.net.csproj" />
+</Solution>
