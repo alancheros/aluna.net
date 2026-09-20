@@ -1,0 +1,44 @@
+﻿# Rider / IntelliJ
+.idea/
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf/
+*.sln.iml
+
+# DotNet build outputs
+bin/
+obj/
+out/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Logs
+*.log
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+# VS Code (optional)
+.vscode/
+
+# DotNet tools
+*.db
+*.db-shm
+*.db-wal
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# OS junk
+.DS_Store
+Thumbs.db
