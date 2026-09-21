@@ -8,22 +8,21 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
 {
     private readonly IAlunaEventStore _inner;
     private readonly ILogger<LoggingEventStoreDecorator> _logger;
-    private readonly string _eventSourcingVersion = "1"; //EventSourcingVersionProvider.Current;
 
 
     public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedId = -1)
     {
         ArgumentNullException.ThrowIfNull(streamId);
         ArgumentNullException.ThrowIfNull(events);
-        
-        using var _ = BeginEventSourcingVersionScope();
 
-        AlunaEventStoreLogs.AppendStarted(_logger, streamId.Name, streamId.AggregateId, expectedId);
+        using var scope = AlunaEventStoreLogs.BeginAggregateScope(_logger, streamId.Name, streamId.AggregateId, expectedId);
+        
+        AlunaEventStoreLogs.AppendStarted(_logger);
 
         try
         {
             var result = _inner.AppendEvents(streamId, events, expectedId);
-            AlunaEventStoreLogs.AppendCompleted(_logger, streamId.Name, streamId.AggregateId, result.AppendedCount, result.LastEventId, result.Success);
+            AlunaEventStoreLogs.AppendCompleted(_logger, result.Success);
             return result;
         }
         catch (Exception ex)
@@ -35,8 +34,6 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
 
     public IEnumerable<EventFact> ReadEvents(string streamName, long fromEventId = 0, int maxCount = 100)
     {
-        using var _ = BeginEventSourcingVersionScope();
-
         AlunaEventStoreLogs.ReadStarted(_logger, streamName, fromEventId, maxCount);
 
         try
@@ -54,8 +51,6 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
 
     public IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamAndId streamId)
     {
-        using var _ = BeginEventSourcingVersionScope();
-
         ArgumentNullException.ThrowIfNull(streamId);
 
         AlunaEventStoreLogs.GetAggregateStarted(_logger, streamId.Name, streamId.AggregateId);
@@ -72,14 +67,6 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
             throw;
         }
     }
-
-#pragma warning disable CS8603 // Possible null reference return.
-    private IDisposable BeginEventSourcingVersionScope() =>
-        _logger.BeginScope(new Dictionary<string, object?>
-        {
-            ["EventSourcingVersion"] = _eventSourcingVersion
-        });
-#pragma warning restore CS8603 // Possible null reference return.
 
     public LoggingEventStoreDecorator(IAlunaEventStore inner, ILogger<LoggingEventStoreDecorator> logger)
     {

@@ -4,7 +4,7 @@ namespace Aluna.EventStore;
 public class InMemoryEventStore : IAlunaEventStore
 {
     private readonly Dictionary<string, List<EventFact>> _streams = new();
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
 
     public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedId = -1)
     {
