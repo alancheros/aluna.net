@@ -2,7 +2,7 @@
 
 namespace Aluna.EventStore;
 
-internal static partial class ParadocEventStoreLogs
+internal static partial class AlunaEventStoreLogs
 {
     [LoggerMessage(EventId = 1000, Level = LogLevel.Debug, Message = "Appending events. Stream={StreamName}, AggregateId={AggregateId}, ExpectedId={ExpectedId}")]
     public static partial void AppendStarted(ILogger logger, string streamName, Guid aggregateId, long expectedId);

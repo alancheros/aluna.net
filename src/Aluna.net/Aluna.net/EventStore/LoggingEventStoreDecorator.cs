@@ -4,11 +4,11 @@ using Aluna.Abstractions;
 
 namespace Aluna.EventStore;
 
-public sealed class LoggingParadocEventStoreDecorator : IAlunaEventStore
+public sealed class LoggingEventStoreDecorator : IAlunaEventStore
 {
     private readonly IAlunaEventStore _inner;
-    private readonly ILogger<LoggingParadocEventStoreDecorator> _logger;
-    private readonly string _eventSourcingVersion = "1";//EventSourcingVersionProvider.Current;
+    private readonly ILogger<LoggingEventStoreDecorator> _logger;
+    private readonly string _eventSourcingVersion = "1"; //EventSourcingVersionProvider.Current;
 
 
     public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedId = -1)
@@ -18,17 +18,17 @@ public sealed class LoggingParadocEventStoreDecorator : IAlunaEventStore
         
         using var _ = BeginEventSourcingVersionScope();
 
-        ParadocEventStoreLogs.AppendStarted(_logger, streamId.Name, streamId.AggregateId, expectedId);
+        AlunaEventStoreLogs.AppendStarted(_logger, streamId.Name, streamId.AggregateId, expectedId);
 
         try
         {
             var result = _inner.AppendEvents(streamId, events, expectedId);
-            ParadocEventStoreLogs.AppendCompleted(_logger, streamId.Name, streamId.AggregateId, result.AppendedCount, result.LastEventId, result.Success);
+            AlunaEventStoreLogs.AppendCompleted(_logger, streamId.Name, streamId.AggregateId, result.AppendedCount, result.LastEventId, result.Success);
             return result;
         }
         catch (Exception ex)
         {
-            ParadocEventStoreLogs.AppendFailed(_logger, ex, streamId.Name, streamId.AggregateId, expectedId);
+            AlunaEventStoreLogs.AppendFailed(_logger, ex, streamId.Name, streamId.AggregateId, expectedId);
             throw;
         }
     }
@@ -37,17 +37,17 @@ public sealed class LoggingParadocEventStoreDecorator : IAlunaEventStore
     {
         using var _ = BeginEventSourcingVersionScope();
 
-        ParadocEventStoreLogs.ReadStarted(_logger, streamName, fromEventId, maxCount);
+        AlunaEventStoreLogs.ReadStarted(_logger, streamName, fromEventId, maxCount);
 
         try
         {
             var events = _inner.ReadEvents(streamName, fromEventId, maxCount).ToArray();
-            ParadocEventStoreLogs.ReadCompleted(_logger, streamName, fromEventId, maxCount, events.Length);
+            AlunaEventStoreLogs.ReadCompleted(_logger, streamName, fromEventId, maxCount, events.Length);
             return events;
         }
         catch (Exception ex)
         {
-            ParadocEventStoreLogs.ReadFailed(_logger, ex, streamName, fromEventId, maxCount);
+            AlunaEventStoreLogs.ReadFailed(_logger, ex, streamName, fromEventId, maxCount);
             throw;
         }
     }
@@ -58,17 +58,17 @@ public sealed class LoggingParadocEventStoreDecorator : IAlunaEventStore
 
         ArgumentNullException.ThrowIfNull(streamId);
 
-        ParadocEventStoreLogs.GetAggregateStarted(_logger, streamId.Name, streamId.AggregateId);
+        AlunaEventStoreLogs.GetAggregateStarted(_logger, streamId.Name, streamId.AggregateId);
 
         try
         {
             var events = _inner.GetEventsForAggregate(streamId).ToArray();
-            ParadocEventStoreLogs.GetAggregateCompleted(_logger, streamId.Name, streamId.AggregateId, events.Length);
+            AlunaEventStoreLogs.GetAggregateCompleted(_logger, streamId.Name, streamId.AggregateId, events.Length);
             return events;
         }
         catch (Exception ex)
         {
-            ParadocEventStoreLogs.GetAggregateFailed(_logger, ex, streamId.Name, streamId.AggregateId);
+            AlunaEventStoreLogs.GetAggregateFailed(_logger, ex, streamId.Name, streamId.AggregateId);
             throw;
         }
     }
@@ -81,7 +81,7 @@ public sealed class LoggingParadocEventStoreDecorator : IAlunaEventStore
         });
 #pragma warning restore CS8603 // Possible null reference return.
 
-    public LoggingParadocEventStoreDecorator(IAlunaEventStore inner, ILogger<LoggingParadocEventStoreDecorator> logger)
+    public LoggingEventStoreDecorator(IAlunaEventStore inner, ILogger<LoggingEventStoreDecorator> logger)
     {
         _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
