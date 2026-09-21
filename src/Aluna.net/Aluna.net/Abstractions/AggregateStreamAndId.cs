@@ -3,20 +3,34 @@
 /// <summary>
 /// Holds the aggregate identifier and its event stream name.
 /// </summary>
-public class AggregateStreamAndId
+public record AggregateStreamAndId
 {
-    /// <summary>
-    /// Gets or sets the unique aggregate identifier.
-    /// </summary>
-    public Guid AggregateId { get; set; } = Guid.Empty;
+    public string Name { get; init; }
+    public Guid AggregateId { get; init; }
 
-    /// <summary>
-    /// Gets or sets the aggregate stream name.
-    /// </summary>
-    public string AggregateStream { get; set; } = string.Empty;
+    public AggregateStreamAndId(string name, Guid aggregateId)
+    {
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+        if (aggregateId == Guid.Empty)
+        {
+            throw new ArgumentException("Id cannot be empty.", nameof(aggregateId));
+        }
+        else
+        {
+            AggregateId = aggregateId;
+        }
+    }
 
-    /// <summary>
-    /// Represents an empty aggregate identifier object.
-    /// </summary>
-    public static AggregateStreamAndId NullObject { get; } = new AggregateStreamAndId();
+    private AggregateStreamAndId()
+    {
+        Name = "NullObject";
+        AggregateId = Guid.Empty;
+    }
+
+    public AggregateStreamAndId(string name) : this(name, Guid.Empty) { }
+
+    private static readonly AggregateStreamAndId _nullObject = new();
+    public static AggregateStreamAndId NullObject { get => _nullObject; }
+
+    public static implicit operator Guid(AggregateStreamAndId streamAndId) => streamAndId.AggregateId;
 }

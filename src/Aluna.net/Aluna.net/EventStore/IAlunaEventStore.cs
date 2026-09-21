@@ -1,0 +1,37 @@
+﻿using Aluna.Abstractions;
+using System.Reflection.Metadata;
+
+namespace Aluna.EventStore;
+
+/// <summary>
+/// Provides append/read operations for event streams used by the document exporter.
+/// </summary>
+public partial interface IAlunaEventStore
+{
+    /// <summary>
+    /// Appends one or more events to the specified stream.
+    /// </summary>
+    /// <param name="streamId">The logical stream name to append events to.</param>
+    /// <param name="events">The events to append, in write order.</param>
+    /// <param name="expectedId">
+    /// The expected last event id in the stream for optimistic concurrency checks.
+    /// Use <c>-1</c> to skip concurrency validation.
+    /// </param>
+    /// <returns>
+    /// The last persisted event id after the append operation completes.
+    /// </returns>
+    AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedId = -1);
+
+    /// <summary>
+    /// Reads events from the specified stream.
+    /// </summary>
+    /// <param name="streamName">The logical stream name to read from.</param>
+    /// <param name="fromEventId">The starting event id (inclusive). Default is <c>0</c>.</param>
+    /// <param name="maxCount">The maximum number of events to return. Default is <c>100</c>.</param>
+    /// <returns>
+    /// A sequence of events from the stream, ordered by event id ascending.
+    /// </returns>
+    IEnumerable<EventFact> ReadEvents(string streamName, long fromEventId = 0, int maxCount = 100);
+
+    IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamAndId streamId);
+}
