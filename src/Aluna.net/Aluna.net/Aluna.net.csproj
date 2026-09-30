@@ -5,12 +5,30 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>Aluna</RootNamespace>
+        <PackageId>Aluna.net</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>Aluna Contributors</Authors>
+        <Description>Aluna is a .NET event sourcing toolkit with abstractions, repositories, and event store implementations.</Description>
+        <PackageTags>event-sourcing;domain-driven-design;ddd;dotnet</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/alancheros/aluna.net</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageProjectUrl>https://github.com/alancheros/aluna.net</PackageProjectUrl>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.1.86" />
       <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.0" />
       <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.12" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="README.md" Pack="true" PackagePath="/" />
     </ItemGroup>
 
 </Project>
