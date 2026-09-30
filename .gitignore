@@ -42,3 +42,6 @@ packages/
 # OS junk
 .DS_Store
 Thumbs.db
+
+#Visual Studio 2026
+.vs/

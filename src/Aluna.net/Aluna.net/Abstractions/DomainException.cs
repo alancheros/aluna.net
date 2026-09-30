@@ -1,4 +1,4 @@
-﻿namespace Paradigma.EventSourcing.Abstractions;
+﻿namespace Aluna.Abstractions;
 
 public class DomainException : Exception
 {

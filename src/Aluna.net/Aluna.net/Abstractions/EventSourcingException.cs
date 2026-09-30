@@ -1,4 +1,4 @@
-﻿namespace Paradigma.EventSourcing.Abstractions;
+﻿namespace Aluna.Abstractions;
 
 /// <summary>
 /// Excepción base para errores relacionados con el manejo de eventos en el contexto de Event Sourcing.

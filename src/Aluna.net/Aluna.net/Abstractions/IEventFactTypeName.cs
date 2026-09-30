@@ -1,7 +1,6 @@
-﻿namespace Paradigma.EventSourcing.Abstractions
+﻿namespace Aluna.Abstractions;
+
+public interface IEventFactTypeName
 {
-    public interface IEventFactTypeName
-    {
-        string Value { get; }
-    }
+    string Value { get; }
 }
