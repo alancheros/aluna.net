@@ -2,5 +2,6 @@
   <Folder Name="/Tests/">
     <Project Path="Tests/Aluna.test/Aluna.test.csproj" />
   </Folder>
+  <Project Path="Aluna.DomainDemo/Aluna.DomainDemo.csproj" Id="0ba7e4e9-3943-4044-8c8b-aa03e07cb6f8" />
   <Project Path="Aluna.net/Aluna.net.csproj" />
 </Solution>

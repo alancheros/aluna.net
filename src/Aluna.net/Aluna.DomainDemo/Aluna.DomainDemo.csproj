@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Events\Account.EventHandlers.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Account.EventHandlers.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aluna.net\Aluna.net.csproj" />
+  </ItemGroup>
+
+</Project>
