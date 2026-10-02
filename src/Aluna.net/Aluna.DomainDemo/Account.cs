@@ -23,6 +23,9 @@ public sealed partial class Account : AggregateRoot, IDomainObject
 
     public DocumentExportJobStatus Status { get; private set; } = DocumentExportJobStatus.Undefined;
     public DateTimeOffset CreatedAtUtc { get; private set; } = DateTimeOffset.MinValue;
+    
+    public Decimal Balance { get; private set; } = 0m;
+    
     public string SourceSystem { get; set; } = string.Empty;
 
     public IReadOnlyDictionary<string, string> Extensions { get => _extensions; }

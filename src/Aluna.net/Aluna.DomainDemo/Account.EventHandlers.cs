@@ -33,16 +33,17 @@ public partial class Account
             }
         }
     }
+    
+    private bool ApplyEvent(TransactionEvent e)
+    {
+        Balance += e.Amount;
+        return true;
+    }
 
     private bool ApplyEvent(AccountCreatedEvent e)
     {
         Id = new AggregateStreamAndId(STREAM_NAME, e.Id);
         CreatedAtUtc = DateTimeOffset.UtcNow;
-        return true;
-    }
-
-    private bool ApplyEvent(TransactionEvent e)
-    {
         return true;
     }
 }

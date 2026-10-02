@@ -18,10 +18,25 @@ namespace Aluna.DomainDemo
                 case CreateAccountCommand createNewJob:
                     Handle(createNewJob);
                     break;
+                case TransactionCommand transactionCommand:
+                    Handle(transactionCommand);
+                    break;
                 default:
                     throw new EventSourcingException($"No handler for command type {command.GetType().Name}");
             }
             return CommandResult.Success;
+        }
+        
+        private void Handle(TransactionCommand command)
+        {
+            var item = _repository.GetById(command.AccountId);
+            if (item == null)
+            {
+                throw new EventSourcingException($"Aggregate with id {command.AccountId} not found.");
+            }
+            item.ApplyEvent(new TransactionEvent(command));
+            _repository.Save(item, command.ExpectedId);
+            _repository.RefreshMemoryCache();
         }
 
         private void Handle(CreateAccountCommand command)
