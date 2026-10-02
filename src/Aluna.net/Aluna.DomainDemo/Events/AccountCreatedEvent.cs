@@ -1,10 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Aluna.DomainDemo.Commands;
 
-namespace Aluna.DomainDemo.Events
+namespace Aluna.DomainDemo.Events;
+
+internal class AccountCreatedEvent : Abstractions.EventFact
 {
-    internal class AccountCreatedEvent: Abstractions.EventFact
+    public Guid Id { get; internal set; }
+
+    public AccountCreatedEvent(CreateAccountCommand command)
     {
+        Id = command.AggregateId;
     }
 }
