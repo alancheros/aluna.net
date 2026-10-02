@@ -5,6 +5,7 @@ namespace Aluna.DomainDemo;
 
 public class AccountRepository : AlunaRepository<Account>
 {
+    public override string StreamName => Account.STREAM_NAME;
 
     protected override Account CreateInstance()
     {

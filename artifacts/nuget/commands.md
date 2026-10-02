@@ -3,5 +3,5 @@ Building the project in Release configuration and packing it into a NuGet packag
 ```
 dotnet clean ".\src\Aluna.net\Aluna.net\Aluna.net.csproj" -c Release
 dotnet restore ".\src\Aluna.net\Aluna.net\Aluna.net.csproj"
-dotnet pack ".\src\Aluna.net\Aluna.net\Aluna.net.csproj" -c Release -o ".\artifacts\nuget" -p:Version=1.2.0
+dotnet pack ".\src\Aluna.net\Aluna.net\Aluna.net.csproj" -c Release -o ".\artifacts\nuget" -p:Version=1.1.1
 ```

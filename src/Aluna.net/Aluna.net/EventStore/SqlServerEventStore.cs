@@ -115,7 +115,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
         var records = connection.Query<EventRecord>(sql, new { StreamType = streamId.Name, AggregateId = streamId.AggregateId });
 
         return records
-            .Select(ToEventFact)
+            .Select(ToDomainEventFact)
             .ToArray();
     }
 
@@ -143,11 +143,16 @@ public partial class SqlServerEventStore : IAlunaEventStore
         var records = connection.Query<EventRecord>(sql, new { StreamType = streamName, FromEventId = fromEventId, MaxCount = maxCount });
 
         return records
-            .Select(ToEventFact)
+            .Select(ToStoredAggregateEventFact)
             .ToArray();
     }
 
-    private EventFact ToEventFact(EventRecord row)
+    private EventFact ToStoredAggregateEventFact(EventRecord row)
+    {
+        return new StoredAggregateEventFact(row.EventSequenceId, row.AggregateId, ToDomainEventFact(row));
+    }
+
+    private EventFact ToDomainEventFact(EventRecord row)
     {
         var eventFact = _eventFactory.CreateEventFact(row);
 
@@ -160,6 +165,25 @@ public partial class SqlServerEventStore : IAlunaEventStore
             row.CorrelationId ?? Guid.Empty,
             DenormalizePayloadFromStorage(row.Payload),
             row.UserId);
+    }
+
+    private sealed class StoredAggregateEventFact : EventFact, IStoredAggregateEvent
+    {
+        public Guid AggregateId { get; }
+        public EventFact DomainEvent { get; }
+
+        public override string EventType => DomainEvent.EventType;
+        public override string EventMessage => DomainEvent.EventMessage;
+
+        public StoredAggregateEventFact(long eventId, Guid aggregateId, EventFact domainEvent)
+        {
+            AggregateId = aggregateId;
+            DomainEvent = domainEvent;
+            EventId = eventId;
+            CorrelationId = domainEvent.CorrelationId;
+            EventTimestamp = domainEvent.EventTimestamp;
+            UserId = domainEvent.UserId;
+        }
     }
 
     private static string NormalizePayloadForStorage(string payload)

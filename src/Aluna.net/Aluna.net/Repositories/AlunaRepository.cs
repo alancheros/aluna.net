@@ -6,6 +6,7 @@ namespace Aluna.Repositories;
 
 public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 {
+    private const int RehydrationPageSize = 500;
     private readonly IAlunaEventStore _eventStore;
     private long lastEventId = long.MinValue;
 
@@ -73,6 +74,92 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
     }
 
     public void Attach(AggregateRoot aggregate) => aggregates.Add(aggregate.Id.AggregateId, (T)aggregate);
+
+    public HydrationSummary RehydrateFromStoreIndex(long storeIndex)
+    {
+        var groupedEvents = new Dictionary<Guid, List<IStoredAggregateEvent>>();
+
+        long processedEvents = 0;
+        long skippedEvents = 0;
+        int hydratedAggregates = 0;
+        long lastScannedStoreIndex = storeIndex;
+
+        if (storeIndex == long.MaxValue)
+        {
+            return new HydrationSummary(0, 0, 0, long.MaxValue);
+        }
+
+        var nextFromEventId = storeIndex + 1;
+        while (true)
+        {
+            var readPage = _eventStore
+                .ReadEvents(StreamName, nextFromEventId, RehydrationPageSize)
+                .OrderBy(x => x.EventId)
+                .ToArray();
+
+            if (readPage.Length == 0)
+            {
+                break;
+            }
+
+            foreach (var eventFact in readPage)
+            {
+                processedEvents++;
+                if (eventFact.EventId > lastScannedStoreIndex)
+                {
+                    lastScannedStoreIndex = eventFact.EventId;
+                }
+
+                if (eventFact is not IStoredAggregateEvent aggregateEvent)
+                {
+                    skippedEvents++;
+                    continue;
+                }
+
+                if (!groupedEvents.TryGetValue(aggregateEvent.AggregateId, out var group))
+                {
+                    group = [];
+                    groupedEvents[aggregateEvent.AggregateId] = group;
+                }
+
+                group.Add(aggregateEvent);
+            }
+
+            if (readPage.Length < RehydrationPageSize)
+            {
+                break;
+            }
+
+            if (lastScannedStoreIndex == long.MaxValue)
+            {
+                break;
+            }
+
+            nextFromEventId = lastScannedStoreIndex + 1;
+        }
+
+        foreach (var grouped in groupedEvents)
+        {
+            var replayEvents = grouped.Value
+                .OrderBy(x => ((EventFact)x).EventId)
+                .Select(x => x.DomainEvent)
+                .ToArray();
+
+            try
+            {
+                var aggregate = CreateInstance();
+                aggregate.LoadFromHistory(replayEvents);
+                Attach(aggregate);
+                hydratedAggregates++;
+            }
+            catch
+            {
+                skippedEvents += replayEvents.Length;
+            }
+        }
+
+        return new HydrationSummary(processedEvents, hydratedAggregates, skippedEvents, lastScannedStoreIndex);
+    }
 
     public AlunaRepository(IAlunaEventStore eventStore)
     {

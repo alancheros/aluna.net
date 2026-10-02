@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Numerics;
+using Aluna.Repositories;
 
 namespace Aluna.Abstractions;
 
@@ -37,4 +38,9 @@ public interface IRepository<out T> where T : AggregateRoot
     /// Attaches an aggregate to tracking without saving it.
     /// </summary>
     void Attach(AggregateRoot aggregate);
+
+    /// <summary>
+    /// Rehydrates aggregates from the repository stream using events after the provided store index.
+    /// </summary>
+    HydrationSummary RehydrateFromStoreIndex(long storeIndex);
 }

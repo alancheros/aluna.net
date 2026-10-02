@@ -3,7 +3,7 @@ namespace Aluna.EventStore;
 
 public class InMemoryEventStore : IAlunaEventStore
 {
-    private readonly Dictionary<string, List<EventFact>> _streams = new();
+    private readonly Dictionary<string, List<StoredDocumentExporterEvent>> _streams = new();
     private readonly Lock _sync = new();
 
     public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedId = -1)
@@ -20,7 +20,7 @@ public class InMemoryEventStore : IAlunaEventStore
         {
             if (!_streams.TryGetValue(streamId.Name, out var streamEvents))
             {
-                streamEvents = new List<EventFact>();
+                streamEvents = new List<StoredDocumentExporterEvent>();
                 _streams[streamId.Name] = streamEvents;
             }
 
@@ -34,7 +34,7 @@ public class InMemoryEventStore : IAlunaEventStore
             foreach (var sourceEvent in events)
             {
                 var nextId = currentLastId + 1;
-                var storedEvent = new StoredDocumentExporterEvent(sourceEvent, nextId);
+                var storedEvent = new StoredDocumentExporterEvent(sourceEvent, streamId.AggregateId, nextId);
                 streamEvents.Add(storedEvent);
                 currentLastId = nextId;
             }
@@ -54,8 +54,9 @@ public class InMemoryEventStore : IAlunaEventStore
                 return Array.Empty<EventFact>();
 
             return events
-                .Where(x => x.EventId >= 0)
+                .Where(x => x.AggregateId == streamId.AggregateId)
                 .OrderBy(x => x.EventId)
+                .Select(x => x.DomainEvent)
                 .ToArray();
         }
     }
@@ -76,18 +77,25 @@ public class InMemoryEventStore : IAlunaEventStore
                 .Where(x => x.EventId >= fromEventId)
                 .OrderBy(x => x.EventId)
                 .Take(maxCount)
+                .Cast<EventFact>()
                 .ToArray();
         }
     }
 
-    private sealed class StoredDocumentExporterEvent : EventFact
+    private sealed class StoredDocumentExporterEvent : EventFact, IStoredAggregateEvent
     {
-        private readonly string eventMessage;
+        public Guid AggregateId { get; }
+
+        public EventFact DomainEvent { get; }
 
         public override string EventMessage => eventMessage;
 
-        public StoredDocumentExporterEvent(EventFact source, long eventId)
+        private readonly string eventMessage;
+
+        public StoredDocumentExporterEvent(EventFact source, Guid aggregateId, long eventId)
         {
+            DomainEvent = source;
+            AggregateId = aggregateId;
             EventId = eventId;
             EventType = source.EventType;
             EventTimestamp = source.EventTimestamp;
