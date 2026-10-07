@@ -72,6 +72,33 @@ public sealed class InMemoryAggregateStore<TAggregate> where TAggregate : Aggreg
     }
 
     /// <summary>
+    /// Counts the number of aggregates that match the given predicate.
+    /// </summary>
+    /// <param name="predicate">The predicate to match aggregates.</param>
+    /// <returns>The number of aggregates that match the predicate.</returns>
+    public int CountItems(Func<TAggregate, bool> predicate)
+    {
+        lock (_gate)
+        {
+            return _byId.Values.Count(predicate);
+        }
+    }
+
+    /// <summary>
+    /// Gets all aggregates that match the given predicate.
+    /// </summary>
+    /// <param name="predicate">The predicate to match aggregates.</param>
+    /// <returns>The aggregates that match the predicate.</returns>
+    public IEnumerable<TAggregate> Get(Func<TAggregate, bool> predicate)
+    {
+        lock (_gate)
+        {
+            return _byId.Values.Where(predicate).ToArray();
+        }
+    }
+
+
+    /// <summary>
     /// Checks whether an aggregate exists for the given identifier.
     /// </summary>
     public bool Contains(Guid id)
