@@ -12,7 +12,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
     public virtual string StreamName => typeof(T).Name; //The stream name is the name of the aggregate type by default. Override this in derived classes if you want a different stream name.
 
-    private readonly InMemoryAggregateStore<T> aggregates = new();
+    protected readonly InMemoryAggregateStore<T> aggregates = new();
     private readonly List<T> createdAggregates = new();
 
     protected virtual T CreateInstance()
