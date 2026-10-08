@@ -14,5 +14,5 @@ public interface IDomainObject
     /// Applies historical events to rebuild aggregate state.
     /// </summary>
     /// <param name="events">The historical events to apply in order.</param>
-    void LoadFromHistory(IEnumerable<EventFact> events);
+    void RebuildFromHistory(IEnumerable<EventFact> events);
 }

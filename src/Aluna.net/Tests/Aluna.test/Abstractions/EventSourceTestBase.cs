@@ -32,7 +32,7 @@ public abstract class EventSourceTestBase<T> : IAsyncLifetime where T : Aggregat
             {
                 var historyEvents = Given().ToArray();
                 sut = CreateSut();
-                sut.LoadFromHistory(historyEvents);
+                sut.RebuildFromHistory(historyEvents);
                 repository.Attach(sut);
 
                 if (historyEvents.Length > 0)

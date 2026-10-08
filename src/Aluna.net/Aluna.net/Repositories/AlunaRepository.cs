@@ -50,7 +50,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         }
 
         var aggregate = MakeNew();
-        aggregate.LoadFromHistory(events);
+        aggregate.RebuildFromHistory(events);
         return aggregate;
     }
 
@@ -109,7 +109,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
                 {
                     processedEvents += replayEvents.Length;
                     var aggregate = GetOrCreateInstance(grouped.Key);
-                    aggregate.LoadFromHistory(replayEvents);
+                    aggregate.RebuildFromHistory(replayEvents);
                     Attach(aggregate);
                     hydratedAggregates++;
                 }

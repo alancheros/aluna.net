@@ -27,8 +27,17 @@ public abstract class AggregateRoot : IDomainObject
 
     /// <summary>
     /// Rebuilds the aggregate state from historical events.
+    /// Clears any uncommitted events and resets the aggregate to the state represented by the provided events.
     /// </summary>
-    public abstract void LoadFromHistory(IEnumerable<EventFact> events);
+    public abstract void RebuildFromHistory(IEnumerable<EventFact> events);
+
+
+    /// <summary>
+    /// Appends new events to the aggregate as a backend resfresh operation. This method is intended for use in scenarios where the aggregate needs to be updated with new events from an external source, such as a message bus or event store.
+    /// </summary>
+    /// <param name="events"></param>
+    public abstract void RefreshWithEvents(IEnumerable<EventFact> events);
+
 
     public int AggregateSequence { get; protected internal set; } = -1;
 

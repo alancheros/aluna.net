@@ -23,9 +23,9 @@ public sealed partial class Account : AggregateRoot, IDomainObject
 
     public DocumentExportJobStatus Status { get; private set; } = DocumentExportJobStatus.Undefined;
     public DateTimeOffset CreatedAtUtc { get; private set; } = DateTimeOffset.MinValue;
-    
+
     public Decimal Balance { get; private set; } = 0m;
-    
+
     public string SourceSystem { get; set; } = string.Empty;
 
     public IReadOnlyDictionary<string, string> Extensions { get => _extensions; }
@@ -60,17 +60,24 @@ public sealed partial class Account : AggregateRoot, IDomainObject
         }
     }
 
-    public override void LoadFromHistory(IEnumerable<EventFact> events)
+    public override void RebuildFromHistory(IEnumerable<EventFact> events) => InnerUpdate(events, true);
+
+    public override void RefreshWithEvents(IEnumerable<EventFact> events) => InnerUpdate(events, false);
+
+    private void InnerUpdate(IEnumerable<EventFact> events, bool clearAggregate)
     {
         ArgumentNullException.ThrowIfNull(events);
 
-        // Reset aggregate state before replaying history
-        Id = AggregateStreamAndId.NullObject;
-        AggregateSequence = -1;
-        Status = DocumentExportJobStatus.Undefined;
-        _extensions.Clear();
-        lastEvent = EventFact.NullEvent;
-        _uncommittedEvents.Clear();
+        if (clearAggregate)
+        {
+            // Reset aggregate state before replaying history
+            Id = AggregateStreamAndId.NullObject;
+            AggregateSequence = -1;
+            Status = DocumentExportJobStatus.Undefined;
+            _extensions.Clear();
+            lastEvent = EventFact.NullEvent;
+            _uncommittedEvents.Clear();
+        }
 
         foreach (EventFact exporterEvent in events)
         {
@@ -87,6 +94,9 @@ public sealed partial class Account : AggregateRoot, IDomainObject
         // Historical events are already committed; don't treat them as pending.
         _uncommittedEvents.Clear();
     }
+
+
+
 
     private void AddToUncommited(EventFact exporterEvent)
     {
