@@ -30,6 +30,8 @@ public abstract class AggregateRoot : IDomainObject
     /// </summary>
     public abstract void LoadFromHistory(IEnumerable<EventFact> events);
 
+    public int AggregateSequence { get; internal set; } = -1;
+
     protected AggregateRoot(int contractVersion)
     {
         if (contractVersion <= 0)

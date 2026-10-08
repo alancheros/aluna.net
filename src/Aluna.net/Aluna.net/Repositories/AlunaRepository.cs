@@ -8,7 +8,6 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 {
     private const int RehydrationPageSize = 500;
     private readonly IAlunaEventStore _eventStore;
-    private long lastEventId = long.MinValue;
 
     public virtual string StreamName => typeof(T).Name; //The stream name is the name of the aggregate type by default. Override this in derived classes if you want a different stream name.
 
@@ -28,12 +27,12 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
     public void Save(AggregateRoot aggregate, long expectedId)
     {
         ArgumentNullException.ThrowIfNull(aggregate);
-        if (expectedId == long.MinValue) { expectedId = lastEventId; }
+        if (expectedId == long.MinValue) { expectedId = aggregate.AggregateSequence; }
         var appendedResult = _eventStore.AppendEvents(aggregate.Id, aggregate.GetUncommittedEvents(), expectedId);
         if (appendedResult.Success)
         {
             aggregate.MarkEventsAsCommitted(appendedResult.AppendedCount);
-            lastEventId = appendedResult.LastEventId;
+            aggregate.AggregateSequence += appendedResult.AppendedCount;
         }
     }
 
