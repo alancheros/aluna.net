@@ -13,6 +13,41 @@ public abstract class EventFact : Message
     /// </summary>
     public string Version { get; init; } = "1.0";
 
+    /// <summary>
+    /// Gets a sentinel event instance representing an empty event.
+    /// </summary>
+    public static EventFact NullEvent { get; } = new NullDocumentExporterEvent();
+
+    /// <summary>
+    /// Gets the sequential event identifier within the event store.
+    /// </summary>
+    public long EventStoreSequenceId { get; init; }
+
+    /// <summary>
+    /// Gets the sequential event identifier within the aggregate.
+    /// </summary>
+    public int AggregateSequenceId { get; init; }
+
+    /// <summary>
+    /// Gets the event type (started, completed, failed, and so on).
+    /// </summary>
+    public virtual string EventType { get; init; } = "Undefined";
+
+    /// <summary>
+    /// Gets or sets the correlation identifier that links related events.
+    /// </summary>
+    public Guid CorrelationId { get; set; }
+
+    /// <summary>
+    /// Gets the JSON message with event-specific details.
+    /// </summary>
+    public virtual string EventMessage { get; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the timestamp when the event occurred.
+    /// </summary>
+    public DateTimeOffset EventTimestamp { get; set; } = DateTimeOffset.UtcNow;
+
     private readonly static JsonSerializerOptions messageJsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -51,35 +86,6 @@ public abstract class EventFact : Message
         }
     }
 
-    /// <summary>
-    /// Gets a sentinel event instance representing an empty event.
-    /// </summary>
-    public static EventFact NullEvent { get; } = new NullDocumentExporterEvent();
-
-    /// <summary>
-    /// Gets the sequential event identifier.
-    /// </summary>
-    public long EventSequenceId { get; init; }
-
-    /// <summary>
-    /// Gets the event type (started, completed, failed, and so on).
-    /// </summary>
-    public virtual string EventType { get; init; } = "Undefined";
-
-    /// <summary>
-    /// Gets or sets the timestamp when the event occurred.
-    /// </summary>
-    public DateTimeOffset EventTimestamp { get; set; } = DateTimeOffset.UtcNow;
-
-    /// <summary>
-    /// Gets or sets the correlation identifier that links related events.
-    /// </summary>
-    public Guid CorrelationId { get; set; }
-
-    /// <summary>
-    /// Gets the JSON message with event-specific details.
-    /// </summary>
-    public virtual string EventMessage { get; } = string.Empty;
 
     public override bool Equals(object? obj)
     {
@@ -93,17 +99,18 @@ public abstract class EventFact : Message
             return false;
         }
 
-        return EventSequenceId == other.EventSequenceId
+        return EventStoreSequenceId == other.EventStoreSequenceId
             && EventTimestamp.Equals(other.EventTimestamp);
     }
 
-    public override int GetHashCode() => HashCode.Combine(EventSequenceId, EventTimestamp);
+    public override int GetHashCode() => HashCode.Combine(EventStoreSequenceId, EventTimestamp);
 
     private sealed class NullDocumentExporterEvent : EventFact
     {
         public NullDocumentExporterEvent()
         {
-            EventSequenceId = long.MinValue;
+            EventStoreSequenceId = long.MinValue;
+            AggregateSequenceId = int.MinValue;
             EventType = "Undefined";
             EventTimestamp = DateTimeOffset.MinValue;
             CorrelationId = Guid.Empty;

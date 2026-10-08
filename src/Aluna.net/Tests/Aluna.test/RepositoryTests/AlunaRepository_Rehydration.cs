@@ -21,14 +21,14 @@ public class AlunaRepository_Rehydration
         eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId1),
         [
             new AccountCreatedEvent(accountId1),
-            new TransactionEvent(10m){ EventSequenceId = 1L}
+            new TransactionEvent(10m){ EventStoreSequenceId = 1L}
         ]);
 
         eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId2),
         [
             new AccountCreatedEvent(accountId2),
-            new TransactionEvent(5m){ EventSequenceId = 2L },
-            new TransactionEvent(-2m){ EventSequenceId = 3L }
+            new TransactionEvent(5m){ EventStoreSequenceId = 2L },
+            new TransactionEvent(-2m){ EventStoreSequenceId = 3L }
         ]);
 
         var summary = repository.RehydrateFromStoreIndex(-1);
@@ -52,7 +52,7 @@ public class AlunaRepository_Rehydration
         eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId),
         [
             new AccountCreatedEvent(accountId),
-            new TransactionEvent(20m){EventSequenceId = 1L}
+            new TransactionEvent(20m){ EventStoreSequenceId = 1L }
         ]);
 
         var existingAggregate = new Account(1);

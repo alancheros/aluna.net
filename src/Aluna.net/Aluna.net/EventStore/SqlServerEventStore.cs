@@ -53,11 +53,24 @@ public partial class SqlServerEventStore : IAlunaEventStore
             return new AppendResult(currentSequence, 0, true, string.Empty);
         }
 
-        var insertSql = $"""
+
+        var noQueryInsertSql = $"""
             INSERT INTO {_qualifiedTableName}
                 ([EventId], [AggregateId], [StreamType], [EventType], [AggregateSequence], [OccurredUtc], [Payload], [MessageVersion], [Metadata], [CorrelationId], [CausationId], [UserId])
             VALUES
                 (@EventId, @AggregateId, @StreamType, @EventType, @AggregateSequence, @OccurredUtc, @Payload, @MessageVersion, @Metadata, @CorrelationId, @CausationId, @UserId);
+            """;
+
+        var insertSql = $"""
+            DECLARE @Inserted TABLE ([EventSequenceId] BIGINT);
+
+            INSERT INTO {_qualifiedTableName}
+                ([EventId], [AggregateId], [StreamType], [EventType], [AggregateSequence], [OccurredUtc], [Payload], [MessageVersion], [Metadata], [CorrelationId], [CausationId], [UserId])
+            OUTPUT INSERTED.[EventSequenceId] INTO @Inserted([EventSequenceId])
+            VALUES
+                (@EventId, @AggregateId, @StreamType, @EventType, @AggregateSequence, @OccurredUtc, @Payload, @MessageVersion, @Metadata, @CorrelationId, @CausationId, @UserId);
+
+            SELECT MAX([EventSequenceId]) FROM @Inserted;
             """;
 
         var rows = new List<object>(batch.Length);
@@ -87,10 +100,18 @@ public partial class SqlServerEventStore : IAlunaEventStore
             });
         }
 
-        connection.Execute(insertSql, rows, transaction);
-        transaction.Commit();
+        if (rows.Count > 1)
+        {
+            connection.Execute(noQueryInsertSql, rows[..^1], transaction);
+        }
 
-        var lastEventId = currentSequence + batch.Length;
+        // if you keep multi-row execution, do per-row and keep the latest:
+        long lastEventId = -1;
+
+        lastEventId = connection.QuerySingle<long>(insertSql, rows[^1], transaction);
+
+
+        transaction.Commit();
         return new AppendResult(lastEventId, batch.Length, true, string.Empty);
     }
 
@@ -149,7 +170,11 @@ public partial class SqlServerEventStore : IAlunaEventStore
 
     private EventFact ToStoredAggregateEventFact(EventRecord row)
     {
-        return new StoredAggregateEventFact(row.EventSequenceId, row.AggregateId, ToDomainEventFact(row));
+        return new StoredAggregateEventFact(
+            aggregateId: row.AggregateId, 
+            domainEvent: ToDomainEventFact(row), 
+            eventStoreSequenceId: row.EventSequenceId, 
+            aggregateSequenceId: row.AggregateSequence);
     }
 
     private EventFact ToDomainEventFact(EventRecord row)
@@ -159,12 +184,13 @@ public partial class SqlServerEventStore : IAlunaEventStore
         if (eventFact != null) { return eventFact; }
 
         return new StoredEventFact(
-            row.EventSequenceId,
-            row.EventType,
-            DateTime.SpecifyKind(row.OccurredUtc, DateTimeKind.Utc),
-            row.CorrelationId ?? Guid.Empty,
-            DenormalizePayloadFromStorage(row.Payload),
-            row.UserId);
+            eventStoreSequenceId: row.EventSequenceId,
+            aggregateSequenceId: row.AggregateSequence,
+            eventType: row.EventType,
+            eventTimestamp: DateTime.SpecifyKind(row.OccurredUtc, DateTimeKind.Utc),
+            eventTraceId: row.CorrelationId ?? Guid.Empty,
+            eventMessage: DenormalizePayloadFromStorage(row.Payload),
+            userId: row.UserId);
     }
 
     private sealed class StoredAggregateEventFact : EventFact, IStoredAggregateEvent
@@ -175,11 +201,12 @@ public partial class SqlServerEventStore : IAlunaEventStore
         public override string EventType => DomainEvent.EventType;
         public override string EventMessage => DomainEvent.EventMessage;
 
-        public StoredAggregateEventFact(long eventId, Guid aggregateId, EventFact domainEvent)
+        public StoredAggregateEventFact(Guid aggregateId, EventFact domainEvent, long eventStoreSequenceId, int aggregateSequenceId)
         {
             AggregateId = aggregateId;
             DomainEvent = domainEvent;
-            EventSequenceId = eventId;
+            EventStoreSequenceId = eventStoreSequenceId;
+            AggregateSequenceId = aggregateSequenceId;
             CorrelationId = domainEvent.CorrelationId;
             EventTimestamp = domainEvent.EventTimestamp;
             UserId = domainEvent.UserId;
@@ -309,7 +336,8 @@ public partial class SqlServerEventStore : IAlunaEventStore
 
     public long GetEventSequenceId(Guid eventId)
     {
-        if (eventId == Guid.Empty) {
+        if (eventId == Guid.Empty)
+        {
             throw new ArgumentException("Event ID cannot be empty.", nameof(eventId));
         }
 

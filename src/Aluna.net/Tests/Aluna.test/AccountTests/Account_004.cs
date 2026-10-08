@@ -12,8 +12,8 @@ public class Account_004 : AccountTestBase
     public override IEnumerable<EventFact> Given()
     {
         yield return new AccountCreatedEvent(accountId);
-        yield return new TransactionEvent(10m) { EventSequenceId = 1L };
-        yield return new TransactionEvent(-3m) { EventSequenceId = 2L };
+        yield return new TransactionEvent(10m) { EventStoreSequenceId = 1L };
+        yield return new TransactionEvent(-3m) { EventStoreSequenceId = 2L };
     }
 
     public override Command? When() => null;

@@ -83,7 +83,7 @@ public sealed partial class Account : AggregateRoot, IDomainObject
         {
             ArgumentNullException.ThrowIfNull(exporterEvent);
 
-            if (lastEvent.EventSequenceId < exporterEvent.EventSequenceId && !ApplyEvent(exporterEvent))
+            if (lastEvent.EventStoreSequenceId < exporterEvent.EventStoreSequenceId && !ApplyEvent(exporterEvent))
             {
                 throw new EventSourcingException($"Failed to apply historical event '{exporterEvent.GetType().Name}'.");
             }

@@ -102,7 +102,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
             foreach (var grouped in readPageResult.GroupedEvents)
             {
                 var replayEvents = grouped.Value
-                    .OrderBy(x => ((EventFact)x).EventSequenceId)
+                    .OrderBy(x => ((EventFact)x).AggregateSequenceId)
                     .Select(x => x.DomainEvent)
                     .ToArray();
 
@@ -154,7 +154,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
         var readPage = _eventStore
             .ReadEvents(StreamName, nextFromEventId, RehydrationPageSize)
-            .OrderBy(x => x.EventSequenceId)
+            .OrderBy(x => x.EventStoreSequenceId)
             .ToArray();
 
         if (readPage.Length == 0)
@@ -165,7 +165,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         var lastScannedStoreIndex = nextFromEventId;
         foreach (var eventFact in readPage)
         {
-            lastScannedStoreIndex = eventFact.EventSequenceId;
+            lastScannedStoreIndex = eventFact.EventStoreSequenceId;
             if (eventFact is not IStoredAggregateEvent aggregateEvent)
             {
                 skippedEvents++;
