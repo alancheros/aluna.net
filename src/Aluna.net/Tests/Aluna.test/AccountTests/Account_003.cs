@@ -27,6 +27,11 @@ public class Account_003 : AccountTestBase
     public void AddDocument_WhenJobIsDraft_ShouldAddFirstDocument()
     {
         HasException.Should().BeFalse(caught?.Message);
-        repository.GetById(accountId).Balance.Should().Be(170);
+        var account = repository.GetById(accountId);
+
+        account.Balance.Should().Be(170);
+        account.LastEvent.Should().BeOfType<TransactionEvent>();
+        account.LastEvent.As<TransactionEvent>().Amount.Should().Be(100m);
+        account.AggregateSequence.Should().Be(4);
     }
 }

@@ -30,9 +30,15 @@ public abstract class EventSourceTestBase<T> : IAsyncLifetime where T : Aggregat
 
             if (!TestingCreationOfNewAggregate)
             {
+                var historyEvents = Given().ToArray();
                 sut = CreateSut();
-                sut.LoadFromHistory(Given());
+                sut.LoadFromHistory(historyEvents);
                 repository.Attach(sut);
+
+                if (historyEvents.Length > 0)
+                {
+                    eventStore.AppendEvents(sut.Id, historyEvents);
+                }
             }
             foreach (var command in ThenGivenCommands())
             {
