@@ -108,12 +108,12 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
                 try
                 {
                     processedEvents += replayEvents.Length;
-                    var aggregate = CreateInstance();
+                    var aggregate = GetOrCreateInstance(grouped.Key);
                     aggregate.LoadFromHistory(replayEvents);
                     Attach(aggregate);
                     hydratedAggregates++;
                 }
-                catch
+                catch(Exception ex)
                 {
                     skippedEvents += replayEvents.Length;
                 }
@@ -128,6 +128,16 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         }
         lastScannedStoreIndex--;
         return new HydrationSummary(processedEvents, hydratedAggregates, skippedEvents, lastScannedStoreIndex);
+    }
+
+    private AggregateRoot GetOrCreateInstance(Guid key)
+    {
+        if (aggregates.TryGet(key, out var existingAggregate))
+        {
+            return existingAggregate ?? throw new EventSourcingException("Should never be thrown");
+        }
+        var newAggregate = CreateInstance();
+        return newAggregate;
     }
 
     private ReadPageResult ReadAndGroupEventsPage(long nextFromEventId)
