@@ -76,92 +76,117 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
     public HydrationSummary RehydrateFromStoreIndex(long storeIndex)
     {
-        var groupedEvents = new Dictionary<Guid, List<IStoredAggregateEvent>>();
 
         long processedEvents = 0;
         long skippedEvents = 0;
         int hydratedAggregates = 0;
-        long lastScannedStoreIndex = storeIndex;
+        long lastScannedStoreIndex = storeIndex + 1;
 
         if (storeIndex == long.MaxValue)
         {
             return new HydrationSummary(0, 0, 0, long.MaxValue);
         }
 
-        var nextFromEventId = storeIndex + 1;
         while (true)
         {
-            var readPage = _eventStore
-                .ReadEvents(StreamName, nextFromEventId, RehydrationPageSize)
-                .OrderBy(x => x.EventId)
-                .ToArray();
+            var readPageResult = ReadAndGroupEventsPage(lastScannedStoreIndex);
 
-            if (readPage.Length == 0)
+            skippedEvents += readPageResult.SkippedEvents;
+
+            if (readPageResult.PageSize == 0)
             {
                 break;
             }
 
-            foreach (var eventFact in readPage)
+            foreach (var grouped in readPageResult.GroupedEvents)
             {
-                processedEvents++;
-                if (eventFact.EventId > lastScannedStoreIndex)
-                {
-                    lastScannedStoreIndex = eventFact.EventId;
-                }
+                var replayEvents = grouped.Value
+                    .OrderBy(x => ((EventFact)x).EventId)
+                    .Select(x => x.DomainEvent)
+                    .ToArray();
 
-                if (eventFact is not IStoredAggregateEvent aggregateEvent)
+                try
                 {
-                    skippedEvents++;
-                    continue;
+                    processedEvents += replayEvents.Length;
+                    var aggregate = CreateInstance();
+                    aggregate.LoadFromHistory(replayEvents);
+                    Attach(aggregate);
+                    hydratedAggregates++;
                 }
-
-                if (!groupedEvents.TryGetValue(aggregateEvent.AggregateId, out var group))
+                catch
                 {
-                    group = [];
-                    groupedEvents[aggregateEvent.AggregateId] = group;
+                    skippedEvents += replayEvents.Length;
                 }
-
-                group.Add(aggregateEvent);
             }
 
-            if (readPage.Length < RehydrationPageSize)
-            {
-                break;
-            }
+            lastScannedStoreIndex = readPageResult.LastScannedStoreIndex + 1;
 
             if (lastScannedStoreIndex == long.MaxValue)
             {
                 break;
             }
-
-            nextFromEventId = lastScannedStoreIndex + 1;
         }
-
-        foreach (var grouped in groupedEvents)
-        {
-            var replayEvents = grouped.Value
-                .OrderBy(x => ((EventFact)x).EventId)
-                .Select(x => x.DomainEvent)
-                .ToArray();
-
-            try
-            {
-                var aggregate = CreateInstance();
-                aggregate.LoadFromHistory(replayEvents);
-                Attach(aggregate);
-                hydratedAggregates++;
-            }
-            catch
-            {
-                skippedEvents += replayEvents.Length;
-            }
-        }
-
+        lastScannedStoreIndex--;
         return new HydrationSummary(processedEvents, hydratedAggregates, skippedEvents, lastScannedStoreIndex);
+    }
+
+    private ReadPageResult ReadAndGroupEventsPage(long nextFromEventId)
+    {
+        var groupedEvents = new Dictionary<Guid, List<IStoredAggregateEvent>>();
+        long skippedEvents = 0;
+
+        var readPage = _eventStore
+            .ReadEvents(StreamName, nextFromEventId, RehydrationPageSize)
+            .OrderBy(x => x.EventId)
+            .ToArray();
+
+        if (readPage.Length == 0)
+        {
+            return new ReadPageResult(readPage.Length, nextFromEventId, skippedEvents, groupedEvents);
+        }
+
+        var lastScannedStoreIndex = nextFromEventId;
+        foreach (var eventFact in readPage)
+        {
+            lastScannedStoreIndex = eventFact.EventId;
+            if (eventFact is not IStoredAggregateEvent aggregateEvent)
+            {
+                skippedEvents++;
+                continue;
+            }
+
+            if (!groupedEvents.TryGetValue(aggregateEvent.AggregateId, out var group))
+            {
+                group = [];
+                groupedEvents[aggregateEvent.AggregateId] = group;
+            }
+
+            group.Add(aggregateEvent);
+        }
+
+        return new ReadPageResult(readPage.Length, lastScannedStoreIndex, skippedEvents, groupedEvents);
     }
 
     public AlunaRepository(IAlunaEventStore eventStore)
     {
         _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
     }
+
+
+    private class ReadPageResult
+    {
+        public int PageSize { get; init; }
+        public long LastScannedStoreIndex { get; init; }
+        public long SkippedEvents { get; init; }
+        public Dictionary<Guid, List<IStoredAggregateEvent>> GroupedEvents { get; init; }
+
+        public ReadPageResult(int pageSize, long lastScannedStoreIndex, long skippedEvents, Dictionary<Guid, List<IStoredAggregateEvent>> groupedEvents)
+        {
+            PageSize = pageSize;
+            LastScannedStoreIndex = lastScannedStoreIndex;
+            SkippedEvents = skippedEvents;
+            GroupedEvents = groupedEvents;
+        }
+    }
 }
+
