@@ -10,7 +10,7 @@ public partial class SqlServerEventStore
         private readonly string readedEventType;
         public StoredEventFact(long eventId, string eventType, DateTimeOffset eventTimestamp, Guid eventTraceId, string eventMessage, string? userId)
         {
-            EventId = eventId;
+            EventSequenceId = eventId;
             readedEventType = eventType;
             EventTimestamp = eventTimestamp;
             CorrelationId = eventTraceId;

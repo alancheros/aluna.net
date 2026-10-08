@@ -39,7 +39,7 @@ public abstract class AggregateRoot : IDomainObject
     public abstract void RefreshWithEvents(IEnumerable<EventFact> events);
 
 
-    public int AggregateSequence { get; protected internal set; } = -1;
+    public SequenceInfo SequenceIndices { get; protected internal set; } = new SequenceInfo() { StoreIndex = -1 };
 
     protected AggregateRoot(int contractVersion)
     {
@@ -49,5 +49,21 @@ public abstract class AggregateRoot : IDomainObject
         }
         ContractVersion = contractVersion;
         Id = AggregateStreamAndId.NullObject;
+    }
+
+    public class SequenceInfo
+    {
+        private int aggregateIndex = -1;
+
+        public long StoreIndex { get; internal set; }
+        public int AggregateIndex { get => aggregateIndex; }
+
+        public int IncrementAggregateIndex(int incrementBy) => Interlocked.Add(ref aggregateIndex, incrementBy);
+
+        public void Clear()
+        {
+            StoreIndex = -1;
+            aggregateIndex = -1;
+        }
     }
 }

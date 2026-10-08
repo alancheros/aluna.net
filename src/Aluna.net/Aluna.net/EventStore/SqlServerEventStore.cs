@@ -179,7 +179,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
         {
             AggregateId = aggregateId;
             DomainEvent = domainEvent;
-            EventId = eventId;
+            EventSequenceId = eventId;
             CorrelationId = domainEvent.CorrelationId;
             EventTimestamp = domainEvent.EventTimestamp;
             UserId = domainEvent.UserId;
@@ -305,5 +305,29 @@ public partial class SqlServerEventStore : IAlunaEventStore
     private static string QuoteIdentifier(string identifier)
     {
         return $"[{identifier.Replace("]", "]]")}]";
+    }
+
+    public long GetEventSequenceId(Guid eventId)
+    {
+        if (eventId == Guid.Empty) {
+            throw new ArgumentException("Event ID cannot be empty.", nameof(eventId));
+        }
+
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = $@"
+            SELECT [EventSequenceId]
+            FROM {_qualifiedTableName}
+            WHERE EventId = @EventId
+        ";
+        command.Parameters.AddWithValue("@EventId", eventId);
+
+        var result = command.ExecuteScalar();
+        if (result == null || result == DBNull.Value)
+        {
+            throw new InvalidOperationException($"Event with ID {eventId} not found.");
+        }
+
+        return Convert.ToInt64(result);
     }
 }

@@ -33,5 +33,17 @@ public partial interface IAlunaEventStore
     /// </returns>
     IEnumerable<EventFact> ReadEvents(string streamName, long fromEventId = 0, int maxCount = 100);
 
+    /// <summary>
+    /// Gets all events for the specified aggregate stream and id.
+    /// </summary>
+    /// <param name="streamId">The aggregate stream and id to get events for.</param>
+    /// <returns>A sequence of events for the specified aggregate.</returns>
     IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamAndId streamId);
+
+    /// <summary>
+    /// Gets the sequence id of the specified event in the event store.
+    /// </summary>
+    /// <param name="eventId">The unique identifier of the event.</param>
+    /// <returns>The sequence id of the event.</returns>
+    long GetEventSequenceId(Guid eventId);
 }

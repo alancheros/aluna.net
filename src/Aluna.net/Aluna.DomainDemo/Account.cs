@@ -72,7 +72,7 @@ public sealed partial class Account : AggregateRoot, IDomainObject
         {
             // Reset aggregate state before replaying history
             Id = AggregateStreamAndId.NullObject;
-            AggregateSequence = -1;
+            SequenceIndices.Clear();
             Status = DocumentExportJobStatus.Undefined;
             _extensions.Clear();
             lastEvent = EventFact.NullEvent;
@@ -83,12 +83,12 @@ public sealed partial class Account : AggregateRoot, IDomainObject
         {
             ArgumentNullException.ThrowIfNull(exporterEvent);
 
-            if (!ApplyEvent(exporterEvent))
+            if (lastEvent.EventSequenceId < exporterEvent.EventSequenceId && !ApplyEvent(exporterEvent))
             {
                 throw new EventSourcingException($"Failed to apply historical event '{exporterEvent.GetType().Name}'.");
             }
 
-            AggregateSequence++;
+            SequenceIndices.IncrementAggregateIndex(1);
         }
 
         // Historical events are already committed; don't treat them as pending.

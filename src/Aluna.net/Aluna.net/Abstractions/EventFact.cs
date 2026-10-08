@@ -59,7 +59,7 @@ public abstract class EventFact : Message
     /// <summary>
     /// Gets the sequential event identifier.
     /// </summary>
-    public long EventId { get; init; }
+    public long EventSequenceId { get; init; }
 
     /// <summary>
     /// Gets the event type (started, completed, failed, and so on).
@@ -93,17 +93,17 @@ public abstract class EventFact : Message
             return false;
         }
 
-        return EventId == other.EventId
+        return EventSequenceId == other.EventSequenceId
             && EventTimestamp.Equals(other.EventTimestamp);
     }
 
-    public override int GetHashCode() => HashCode.Combine(EventId, EventTimestamp);
+    public override int GetHashCode() => HashCode.Combine(EventSequenceId, EventTimestamp);
 
     private sealed class NullDocumentExporterEvent : EventFact
     {
         public NullDocumentExporterEvent()
         {
-            EventId = long.MinValue;
+            EventSequenceId = long.MinValue;
             EventType = "Undefined";
             EventTimestamp = DateTimeOffset.MinValue;
             CorrelationId = Guid.Empty;

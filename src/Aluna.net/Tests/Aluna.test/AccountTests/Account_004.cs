@@ -12,8 +12,8 @@ public class Account_004 : AccountTestBase
     public override IEnumerable<EventFact> Given()
     {
         yield return new AccountCreatedEvent(accountId);
-        yield return new TransactionEvent(10m);
-        yield return new TransactionEvent(-3m);
+        yield return new TransactionEvent(10m) { EventSequenceId = 1L };
+        yield return new TransactionEvent(-3m) { EventSequenceId = 2L };
     }
 
     public override Command? When() => null;
@@ -28,6 +28,6 @@ public class Account_004 : AccountTestBase
 
         account.LastEvent.Should().BeOfType<TransactionEvent>();
         account.LastEvent.As<TransactionEvent>().Amount.Should().Be(-3m);
-        account.AggregateSequence.Should().Be(2);
+        account.SequenceIndices.AggregateIndex.Should().Be(2);
     }
 }

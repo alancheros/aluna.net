@@ -4,6 +4,7 @@ namespace Aluna.EventStore;
 public class InMemoryEventStore : IAlunaEventStore
 {
     private readonly Dictionary<string, List<StoredDocumentExporterEvent>> _streams = new();
+    private readonly Dictionary<Guid, long> eventSequence = new();
     private readonly Lock _sync = new();
 
     public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
@@ -24,11 +25,10 @@ public class InMemoryEventStore : IAlunaEventStore
                 _streams[streamId.Name] = streamEvents;
             }
 
-            var currentLastId = streamEvents.Count == 0 ? -1L : streamEvents[^1].EventId;
+            var currentLastId = streamEvents.Count == 0 ? -1L : streamEvents[^1].EventSequenceId;
             if (expectedAggregateSequence >= 0 && expectedAggregateSequence != currentLastId)
             {
-                throw new InvalidOperationException(
-                    $"Concurrency conflict on stream '{streamId}'. Expected last id {expectedAggregateSequence}, actual {currentLastId}.");
+                throw new InvalidOperationException($"Concurrency conflict on stream '{streamId}'. Expected last id {expectedAggregateSequence}, actual {currentLastId}.");
             }
 
             foreach (var sourceEvent in events)
@@ -37,10 +37,20 @@ public class InMemoryEventStore : IAlunaEventStore
                 var storedEvent = new StoredDocumentExporterEvent(sourceEvent, streamId.AggregateId, nextId);
                 streamEvents.Add(storedEvent);
                 currentLastId = nextId;
+                eventSequence.Add(storedEvent.EventId, storedEvent.EventSequenceId);
             }
 
             return new AppendResult(currentLastId, events.Count(), true, string.Empty);
         }
+    }
+
+    public long GetEventSequenceId(Guid eventId)
+    {
+        if (eventSequence.TryGetValue(eventId, out var sequence))
+        {
+            return sequence;
+        }
+        throw new EventSourcingException("The event is not in the store");
     }
 
     public IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamAndId streamId)
@@ -55,7 +65,7 @@ public class InMemoryEventStore : IAlunaEventStore
 
             return events
                 .Where(x => x.AggregateId == streamId.AggregateId)
-                .OrderBy(x => x.EventId)
+                .OrderBy(x => x.EventSequenceId)
                 .Select(x => x.DomainEvent)
                 .ToArray();
         }
@@ -74,8 +84,8 @@ public class InMemoryEventStore : IAlunaEventStore
                 return Array.Empty<EventFact>();
 
             return events
-                .Where(x => x.EventId >= fromEventId)
-                .OrderBy(x => x.EventId)
+                .Where(x => x.EventSequenceId >= fromEventId)
+                .OrderBy(x => x.EventSequenceId)
                 .Take(maxCount)
                 .Cast<EventFact>()
                 .ToArray();
@@ -84,6 +94,7 @@ public class InMemoryEventStore : IAlunaEventStore
 
     private sealed class StoredDocumentExporterEvent : EventFact, IStoredAggregateEvent
     {
+        public Guid EventId { get; set; } = Guid.NewGuid();
         public Guid AggregateId { get; }
 
         public EventFact DomainEvent { get; }
@@ -96,7 +107,7 @@ public class InMemoryEventStore : IAlunaEventStore
         {
             DomainEvent = source;
             AggregateId = aggregateId;
-            EventId = eventId;
+            EventSequenceId = eventId;
             EventType = source.EventType;
             EventTimestamp = source.EventTimestamp;
             CorrelationId = source.CorrelationId;

@@ -27,12 +27,13 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
     public void Save(AggregateRoot aggregate, long expectedId)
     {
         ArgumentNullException.ThrowIfNull(aggregate);
-        if (expectedId == long.MinValue) { expectedId = aggregate.AggregateSequence; }
+        if (expectedId == long.MinValue) { expectedId = aggregate.SequenceIndices.AggregateIndex; }
         var appendedResult = _eventStore.AppendEvents(aggregate.Id, aggregate.GetUncommittedEvents(), expectedId);
         if (appendedResult.Success)
         {
             aggregate.MarkEventsAsCommitted(appendedResult.AppendedCount);
-            aggregate.AggregateSequence += appendedResult.AppendedCount;
+            aggregate.SequenceIndices.IncrementAggregateIndex(appendedResult.AppendedCount);
+            aggregate.SequenceIndices.StoreIndex = appendedResult.LastEventId;
         }
     }
 
@@ -101,19 +102,26 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
             foreach (var grouped in readPageResult.GroupedEvents)
             {
                 var replayEvents = grouped.Value
-                    .OrderBy(x => ((EventFact)x).EventId)
+                    .OrderBy(x => ((EventFact)x).EventSequenceId)
                     .Select(x => x.DomainEvent)
                     .ToArray();
 
                 try
                 {
                     processedEvents += replayEvents.Length;
-                    var aggregate = GetOrCreateInstance(grouped.Key);
-                    aggregate.RebuildFromHistory(replayEvents);
-                    Attach(aggregate);
+                    (bool isNew, var aggregate) = GetOrCreateInstance(grouped.Key);
+                    if (isNew)
+                    {
+                        aggregate.RebuildFromHistory(replayEvents);
+                        Attach(aggregate);
+                    }
+                    else
+                    {
+                        aggregate.RefreshWithEvents(replayEvents);
+                    }
                     hydratedAggregates++;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     skippedEvents += replayEvents.Length;
                 }
@@ -130,14 +138,13 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         return new HydrationSummary(processedEvents, hydratedAggregates, skippedEvents, lastScannedStoreIndex);
     }
 
-    private AggregateRoot GetOrCreateInstance(Guid key)
+    private (bool isNew, AggregateRoot) GetOrCreateInstance(Guid key)
     {
         if (aggregates.TryGet(key, out var existingAggregate))
         {
-            return existingAggregate ?? throw new EventSourcingException("Should never be thrown");
+            return (false, existingAggregate ?? throw new EventSourcingException($"Should never be thrown in {nameof(GetOrCreateInstance)}"));
         }
-        var newAggregate = CreateInstance();
-        return newAggregate;
+        return (true, CreateInstance());
     }
 
     private ReadPageResult ReadAndGroupEventsPage(long nextFromEventId)
@@ -147,7 +154,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
         var readPage = _eventStore
             .ReadEvents(StreamName, nextFromEventId, RehydrationPageSize)
-            .OrderBy(x => x.EventId)
+            .OrderBy(x => x.EventSequenceId)
             .ToArray();
 
         if (readPage.Length == 0)
@@ -158,7 +165,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         var lastScannedStoreIndex = nextFromEventId;
         foreach (var eventFact in readPage)
         {
-            lastScannedStoreIndex = eventFact.EventId;
+            lastScannedStoreIndex = eventFact.EventSequenceId;
             if (eventFact is not IStoredAggregateEvent aggregateEvent)
             {
                 skippedEvents++;
