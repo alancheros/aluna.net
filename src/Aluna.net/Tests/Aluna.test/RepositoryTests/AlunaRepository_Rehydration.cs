@@ -43,6 +43,35 @@ public class AlunaRepository_Rehydration
     }
 
     [Fact]
+    public void RehydrateFromStoreIndex_WhenAggregateAlreadyExistsInRepository_ShouldReuseExistingAggregate()
+    {
+        var eventStore = new InMemoryEventStore();
+        var repository = new AccountRepository(eventStore);
+
+        var accountId = Guid.NewGuid();
+        eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId),
+        [
+            new AccountCreatedEvent(accountId),
+            new TransactionEvent(20m)
+        ]);
+
+        var existingAggregate = new Account(1);
+        existingAggregate.ApplyEvent(new AccountCreatedEvent(accountId));
+        repository.Attach(existingAggregate);
+
+        var summary = repository.RehydrateFromStoreIndex(-1);
+
+        summary.ProcessedEvents.Should().Be(2);
+        summary.HydratedAggregates.Should().Be(1);
+        summary.SkippedEvents.Should().Be(0);
+        summary.LastScannedStoreIndex.Should().Be(1);
+
+        var hydratedAggregate = repository.GetById(accountId);
+        hydratedAggregate.Should().BeSameAs(existingAggregate);
+        hydratedAggregate.Balance.Should().Be(20m);
+    }
+
+    [Fact]
     public void RehydrateFromStoreIndex_WhenAggregateWasNotCreated_ShouldSkipEvents()
     {
         var eventStore = new InMemoryEventStore();
