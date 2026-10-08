@@ -15,7 +15,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
 
     private readonly IEventFactFactory _eventFactory;
 
-    public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedId = -1)
+    public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
     {
         ArgumentNullException.ThrowIfNull(streamId);
         ArgumentNullException.ThrowIfNull(events);
@@ -42,9 +42,9 @@ public partial class SqlServerEventStore : IAlunaEventStore
             new { StreamType = streamId.Name, AggregateId = streamId.AggregateId },
             transaction);
 
-        if (expectedId >= 0 && expectedId != currentSequence)
+        if (expectedAggregateSequence >= 0 && expectedAggregateSequence != currentSequence)
         {
-            throw new InvalidOperationException($"Concurrency conflict on stream '{streamId.Name}:{streamId.AggregateId}'. Expected last id {expectedId}, actual {currentSequence}.");
+            throw new InvalidOperationException($"Concurrency conflict on stream '{streamId.Name}:{streamId.AggregateId}'. Expected last id {expectedAggregateSequence}, actual {currentSequence}.");
         }
 
         if (batch.Length == 0)

@@ -6,7 +6,7 @@ public class InMemoryEventStore : IAlunaEventStore
     private readonly Dictionary<string, List<StoredDocumentExporterEvent>> _streams = new();
     private readonly Lock _sync = new();
 
-    public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedId = -1)
+    public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
     {
         ArgumentNullException.ThrowIfNull(events);
         ArgumentNullException.ThrowIfNull(streamId);
@@ -25,10 +25,10 @@ public class InMemoryEventStore : IAlunaEventStore
             }
 
             var currentLastId = streamEvents.Count == 0 ? -1L : streamEvents[^1].EventId;
-            if (expectedId >= 0 && expectedId != currentLastId)
+            if (expectedAggregateSequence >= 0 && expectedAggregateSequence != currentLastId)
             {
                 throw new InvalidOperationException(
-                    $"Concurrency conflict on stream '{streamId}'. Expected last id {expectedId}, actual {currentLastId}.");
+                    $"Concurrency conflict on stream '{streamId}'. Expected last id {expectedAggregateSequence}, actual {currentLastId}.");
             }
 
             foreach (var sourceEvent in events)

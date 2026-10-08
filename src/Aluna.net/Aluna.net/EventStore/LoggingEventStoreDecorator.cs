@@ -10,24 +10,24 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
     private readonly ILogger<LoggingEventStoreDecorator> _logger;
 
 
-    public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedId = -1)
+    public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
     {
         ArgumentNullException.ThrowIfNull(streamId);
         ArgumentNullException.ThrowIfNull(events);
 
-        using var scope = AlunaEventStoreLogs.BeginAggregateScope(_logger, streamId.Name, streamId.AggregateId, expectedId);
+        using var scope = AlunaEventStoreLogs.BeginAggregateScope(_logger, streamId.Name, streamId.AggregateId, expectedAggregateSequence);
         
         AlunaEventStoreLogs.AppendStarted(_logger);
 
         try
         {
-            var result = _inner.AppendEvents(streamId, events, expectedId);
+            var result = _inner.AppendEvents(streamId, events, expectedAggregateSequence);
             AlunaEventStoreLogs.AppendCompleted(_logger, result.Success);
             return result;
         }
         catch (Exception ex)
         {
-            AlunaEventStoreLogs.AppendFailed(_logger, ex, streamId.Name, streamId.AggregateId, expectedId);
+            AlunaEventStoreLogs.AppendFailed(_logger, ex, streamId.Name, streamId.AggregateId, expectedAggregateSequence);
             throw;
         }
     }

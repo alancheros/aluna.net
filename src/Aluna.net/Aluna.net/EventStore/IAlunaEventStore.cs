@@ -13,14 +13,14 @@ public partial interface IAlunaEventStore
     /// </summary>
     /// <param name="streamId">The logical stream name to append events to.</param>
     /// <param name="events">The events to append, in write order.</param>
-    /// <param name="expectedId">
+    /// <param name="expectedAggregateSequence">
     /// The expected last event id in the stream for optimistic concurrency checks.
     /// Use <c>-1</c> to skip concurrency validation.
     /// </param>
     /// <returns>
     /// The last persisted event id after the append operation completes.
     /// </returns>
-    AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedId = -1);
+    AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1);
 
     /// <summary>
     /// Reads events from the specified stream.
