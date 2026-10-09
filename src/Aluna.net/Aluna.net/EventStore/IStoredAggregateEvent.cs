@@ -5,5 +5,5 @@ namespace Aluna.EventStore;
 public interface IStoredAggregateEvent
 {
     Guid AggregateId { get; }
-    EventFact DomainEvent { get; }
+    EventFact Event { get; }
 }

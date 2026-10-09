@@ -33,7 +33,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
         var getCurrentSequenceSql = $"""
             SELECT ISNULL(MAX(CAST([AggregateSequence] AS BIGINT)), -1)
             FROM {_qualifiedTableName}
-            WHERE [StreamType] = @StreamType
+            WHERE [StreamName] = @StreamName
                 AND [AggregateId] = @AggregateId;
             """;
 
@@ -56,19 +56,19 @@ public partial class SqlServerEventStore : IAlunaEventStore
 
         var noQueryInsertSql = $"""
             INSERT INTO {_qualifiedTableName}
-                ([EventId], [AggregateId], [StreamType], [EventType], [AggregateSequence], [OccurredUtc], [Payload], [MessageVersion], [Metadata], [CorrelationId], [CausationId], [UserId])
+                ([EventId], [AggregateId], [StreamName], [EventType], [AggregateSequence], [OccurredUtc], [Payload], [MessageVersion], [Metadata], [CorrelationId], [CausationId], [UserId])
             VALUES
-                (@EventId, @AggregateId, @StreamType, @EventType, @AggregateSequence, @OccurredUtc, @Payload, @MessageVersion, @Metadata, @CorrelationId, @CausationId, @UserId);
+                (@EventId, @AggregateId, @StreamName, @EventType, @AggregateSequence, @OccurredUtc, @Payload, @MessageVersion, @Metadata, @CorrelationId, @CausationId, @UserId);
             """;
 
         var insertSql = $"""
             DECLARE @Inserted TABLE ([EventSequenceId] BIGINT);
 
             INSERT INTO {_qualifiedTableName}
-                ([EventId], [AggregateId], [StreamType], [EventType], [AggregateSequence], [OccurredUtc], [Payload], [MessageVersion], [Metadata], [CorrelationId], [CausationId], [UserId])
+                ([EventId], [AggregateId], [StreamName], [EventType], [AggregateSequence], [OccurredUtc], [Payload], [MessageVersion], [Metadata], [CorrelationId], [CausationId], [UserId])
             OUTPUT INSERTED.[EventSequenceId] INTO @Inserted([EventSequenceId])
             VALUES
-                (@EventId, @AggregateId, @StreamType, @EventType, @AggregateSequence, @OccurredUtc, @Payload, @MessageVersion, @Metadata, @CorrelationId, @CausationId, @UserId);
+                (@EventId, @AggregateId, @StreamName, @EventType, @AggregateSequence, @OccurredUtc, @Payload, @MessageVersion, @Metadata, @CorrelationId, @CausationId, @UserId);
 
             SELECT MAX([EventSequenceId]) FROM @Inserted;
             """;
@@ -125,9 +125,9 @@ public partial class SqlServerEventStore : IAlunaEventStore
         }
 
         var sql = $"""
-            SELECT [EventSequenceId], [AggregateId], [StreamType], [AggregateSequence], [EventType], [OccurredUtc], [Payload], [CorrelationId], [UserId]
+            SELECT [EventSequenceId], [AggregateId], [StreamName], [AggregateSequence], [EventType], [OccurredUtc], [Payload], [CorrelationId], [UserId]
             FROM {_qualifiedTableName}
-            WHERE [StreamType] = @StreamType
+            WHERE [StreamName] = @StreamName
                 AND [AggregateId] = @AggregateId
             ORDER BY [AggregateSequence] ASC, [EventSequenceId] ASC;
             """;
@@ -153,9 +153,9 @@ public partial class SqlServerEventStore : IAlunaEventStore
         }
 
         var sql = $"""
-            SELECT TOP (@MaxCount) [EventSequenceId], [AggregateId], [StreamType], [AggregateSequence], [EventType], [OccurredUtc], [Payload], [MessageVersion], [CorrelationId], [UserId]
+            SELECT TOP (@MaxCount) [EventSequenceId], [AggregateId], [StreamName], [AggregateSequence], [EventType], [OccurredUtc], [Payload], [MessageVersion], [CorrelationId], [UserId]
             FROM {_qualifiedTableName}
-            WHERE [StreamType] = @StreamType
+            WHERE [StreamName] = @StreamName
                 AND [EventSequenceId] >= @FromEventId
             ORDER BY [AggregateSequence] ASC, [EventSequenceId] ASC;
             """;
@@ -196,15 +196,15 @@ public partial class SqlServerEventStore : IAlunaEventStore
     private sealed class StoredAggregateEventFact : EventFact, IStoredAggregateEvent
     {
         public Guid AggregateId { get; }
-        public EventFact DomainEvent { get; }
+        public EventFact Event { get; }
 
-        public override string EventType => DomainEvent.EventType;
-        public override string EventMessage => DomainEvent.EventMessage;
+        public override string EventType => Event.EventType;
+        public override string EventMessage => Event.EventMessage;
 
         public StoredAggregateEventFact(Guid aggregateId, EventFact domainEvent, long storeSequence, int aggregateSequence)
         {
             AggregateId = aggregateId;
-            DomainEvent = domainEvent;
+            Event = domainEvent;
             StoreSequence = storeSequence;
             AggregateSequence = aggregateSequence;
             CorrelationId = domainEvent.CorrelationId;

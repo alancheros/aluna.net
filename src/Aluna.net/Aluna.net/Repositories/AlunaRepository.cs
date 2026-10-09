@@ -103,7 +103,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
             {
                 var replayEvents = grouped.Value
                     .OrderBy(x => ((EventFact)x).AggregateSequence)
-                    .Select(x => x.DomainEvent)
+                    .Select(x => x.Event)
                     .ToArray();
 
                 try

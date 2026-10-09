@@ -26,12 +26,12 @@ public partial interface IAlunaEventStore
     /// Reads events from the specified stream.
     /// </summary>
     /// <param name="streamName">The logical stream name to read from.</param>
-    /// <param name="fromEventId">The starting event id (inclusive). Default is <c>0</c>.</param>
+    /// <param name="fromStoreSequence">The starting event id (inclusive). Default is <c>0</c>.</param>
     /// <param name="maxCount">The maximum number of events to return. Default is <c>100</c>.</param>
     /// <returns>
     /// A sequence of events from the stream, ordered by event id ascending.
     /// </returns>
-    IEnumerable<EventFact> ReadEvents(string streamName, long fromEventId = 0, int maxCount = 100);
+    IEnumerable<EventFact> ReadEvents(string streamName, long fromStoreSequence = 0, int maxCount = 100);
 
     /// <summary>
     /// Gets all events for the specified aggregate stream and id.

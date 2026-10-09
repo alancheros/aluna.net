@@ -16,7 +16,7 @@ public abstract class EventFact : Message
     /// <summary>
     /// Gets a sentinel event instance representing an empty event.
     /// </summary>
-    public static EventFact NullEvent { get; } = new NullDocumentExporterEvent();
+    public static EventFact NullEvent { get; } = new NullEventFact();
 
     /// <summary>
     /// Gets the sequential event identifier within the event store.
@@ -105,9 +105,9 @@ public abstract class EventFact : Message
 
     public override int GetHashCode() => HashCode.Combine(StoreSequence, EventTimestamp);
 
-    private sealed class NullDocumentExporterEvent : EventFact
+    private sealed class NullEventFact : EventFact
     {
-        public NullDocumentExporterEvent()
+        public NullEventFact()
         {
             StoreSequence = long.MinValue;
             AggregateSequence = int.MinValue;
