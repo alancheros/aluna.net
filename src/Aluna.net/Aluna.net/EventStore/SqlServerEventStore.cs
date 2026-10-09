@@ -87,7 +87,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
             {
                 EventId = Guid.NewGuid(),
                 AggregateId = streamId.AggregateId,
-                SteamName = streamId.StreamName,
+                StreamName = streamId.StreamName,
                 EventType = source.EventType,
                 AggregateSequence = (int)streamVersionLong,
                 OccurredUtc = source.EventTimestamp.UtcDateTime,
@@ -140,7 +140,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
             .ToArray();
     }
 
-    public IEnumerable<EventFact> ReadEvents(string streamName, long fromEventId = 0, int maxCount = 100)
+    public IEnumerable<EventFact> ReadEvents(string streamName, long fromStoreSequence = 0, int maxCount = 100)
     {
         if (string.IsNullOrWhiteSpace(streamName))
         {
@@ -156,12 +156,12 @@ public partial class SqlServerEventStore : IAlunaEventStore
             SELECT TOP (@MaxCount) [EventSequenceId], [AggregateId], [StreamName], [AggregateSequence], [EventType], [OccurredUtc], [Payload], [MessageVersion], [CorrelationId], [UserId]
             FROM {_qualifiedTableName}
             WHERE [StreamName] = @StreamName
-                AND [EventSequenceId] >= @FromEventId
+                AND [EventSequenceId] >= @FromStoreSequence
             ORDER BY [AggregateSequence] ASC, [EventSequenceId] ASC;
             """;
 
         using var connection = OpenConnection();
-        var records = connection.Query<EventRecord>(sql, new { StreamName = streamName, FromEventId = fromEventId, MaxCount = maxCount });
+        var records = connection.Query<EventRecord>(sql, new { StreamName = streamName, FromStoreSequence = fromStoreSequence, MaxCount = maxCount });
 
         return records
             .Select(ToStoredAggregateEventFact)
