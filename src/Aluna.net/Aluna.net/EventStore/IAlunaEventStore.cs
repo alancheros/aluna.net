@@ -45,5 +45,5 @@ public partial interface IAlunaEventStore
     /// </summary>
     /// <param name="eventId">The unique identifier of the event.</param>
     /// <returns>The sequence id of the event.</returns>
-    long GetEventSequenceId(Guid eventId);
+    long GetSequenceByEventId(Guid eventId);
 }

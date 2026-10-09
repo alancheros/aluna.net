@@ -68,7 +68,7 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
         }
     }
 
-    public long GetEventSequenceId(Guid eventId) => _inner.GetEventSequenceId(eventId);
+    public long GetSequenceByEventId(Guid eventId) => _inner.GetSequenceByEventId(eventId);
 
     public LoggingEventStoreDecorator(IAlunaEventStore inner, ILogger<LoggingEventStoreDecorator> logger)
     {

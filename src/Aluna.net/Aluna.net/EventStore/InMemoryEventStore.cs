@@ -37,14 +37,14 @@ public class InMemoryEventStore : IAlunaEventStore
                 var storedEvent = new StoredDocumentExporterEvent(sourceEvent, streamId.AggregateId, nextId, nextId);
                 streamEvents.Add(storedEvent);
                 currentLastId = nextId;
-                eventSequence.Add(storedEvent.EventId, storedEvent.EventStoreSequenceId);
+                eventSequence.Add(storedEvent.EventId, storedEvent.StoreSequence);
             }
 
             return new AppendResult(currentLastId, events.Count(), true, string.Empty);
         }
     }
 
-    public long GetEventSequenceId(Guid eventId)
+    public long GetSequenceByEventId(Guid eventId)
     {
         if (eventSequence.TryGetValue(eventId, out var sequence))
         {
@@ -65,7 +65,7 @@ public class InMemoryEventStore : IAlunaEventStore
 
             return events
                 .Where(x => x.AggregateId == streamId.AggregateId)
-                .OrderBy(x => x.AggregateSequenceId)
+                .OrderBy(x => x.AggregateSequence)
                 .Select(x => x.DomainEvent)
                 .ToArray();
         }
@@ -84,8 +84,8 @@ public class InMemoryEventStore : IAlunaEventStore
                 return Array.Empty<EventFact>();
 
             return events
-                .Where(x => x.EventStoreSequenceId >= fromEventId)
-                .OrderBy(x => x.EventStoreSequenceId)
+                .Where(x => x.StoreSequence >= fromEventId)
+                .OrderBy(x => x.StoreSequence)
                 .Take(maxCount)
                 .Cast<EventFact>()
                 .ToArray();
@@ -103,12 +103,12 @@ public class InMemoryEventStore : IAlunaEventStore
 
         private readonly string eventMessage;
 
-        public StoredDocumentExporterEvent(EventFact source, Guid aggregateId, long eventId, int aggregateSequenceId)
+        public StoredDocumentExporterEvent(EventFact source, Guid aggregateId, long eventId, int aggregateSequence)
         {
             DomainEvent = source;
             AggregateId = aggregateId;
-            EventStoreSequenceId = eventId;
-            AggregateSequenceId = aggregateSequenceId;
+            StoreSequence = eventId;
+            AggregateSequence = aggregateSequence;
             EventType = source.EventType;
             EventTimestamp = source.EventTimestamp;
             CorrelationId = source.CorrelationId;

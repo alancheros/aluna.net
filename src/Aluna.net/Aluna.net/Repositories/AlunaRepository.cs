@@ -24,16 +24,16 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         return result;
     }
 
-    public void Save(AggregateRoot aggregate, long expectedId)
+    public void Save(AggregateRoot aggregate, long expectedAggregateSequence)
     {
         ArgumentNullException.ThrowIfNull(aggregate);
-        if (expectedId == long.MinValue) { expectedId = aggregate.SequenceIndices.AggregateIndex; }
-        var appendedResult = _eventStore.AppendEvents(aggregate.StreamKey, aggregate.GetUncommittedEvents(), expectedId);
+        if (expectedAggregateSequence == long.MinValue) { expectedAggregateSequence = aggregate.SequenceIndices.AggregateIndex; }
+        var appendedResult = _eventStore.AppendEvents(aggregate.StreamKey, aggregate.GetUncommittedEvents(), expectedAggregateSequence);
         if (appendedResult.Success)
         {
             aggregate.MarkEventsAsCommitted(appendedResult.AppendedCount);
             aggregate.SequenceIndices.IncrementAggregateIndex(appendedResult.AppendedCount);
-            aggregate.SequenceIndices.StoreIndex = appendedResult.LastEventId;
+            aggregate.SequenceIndices.StoreIndex = appendedResult.LastEventSequence;
         }
     }
 
@@ -102,7 +102,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
             foreach (var grouped in readPageResult.GroupedEvents)
             {
                 var replayEvents = grouped.Value
-                    .OrderBy(x => ((EventFact)x).AggregateSequenceId)
+                    .OrderBy(x => ((EventFact)x).AggregateSequence)
                     .Select(x => x.DomainEvent)
                     .ToArray();
 
@@ -154,7 +154,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
         var readPage = _eventStore
             .ReadEvents(StreamName, nextFromEventId, RehydrationPageSize)
-            .OrderBy(x => x.EventStoreSequenceId)
+            .OrderBy(x => x.StoreSequence)
             .ToArray();
 
         if (readPage.Length == 0)
@@ -165,7 +165,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         var lastScannedStoreIndex = nextFromEventId;
         foreach (var eventFact in readPage)
         {
-            lastScannedStoreIndex = eventFact.EventStoreSequenceId;
+            lastScannedStoreIndex = eventFact.StoreSequence;
             if (eventFact is not IStoredAggregateEvent aggregateEvent)
             {
                 skippedEvents++;

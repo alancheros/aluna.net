@@ -21,12 +21,12 @@ public abstract class EventFact : Message
     /// <summary>
     /// Gets the sequential event identifier within the event store.
     /// </summary>
-    public long EventStoreSequenceId { get; init; }
+    public long StoreSequence { get; init; }
 
     /// <summary>
     /// Gets the sequential event identifier within the aggregate.
     /// </summary>
-    public int AggregateSequenceId { get; init; }
+    public int AggregateSequence { get; init; }
 
     /// <summary>
     /// Gets the event type (started, completed, failed, and so on).
@@ -99,18 +99,18 @@ public abstract class EventFact : Message
             return false;
         }
 
-        return EventStoreSequenceId == other.EventStoreSequenceId
+        return StoreSequence == other.StoreSequence
             && EventTimestamp.Equals(other.EventTimestamp);
     }
 
-    public override int GetHashCode() => HashCode.Combine(EventStoreSequenceId, EventTimestamp);
+    public override int GetHashCode() => HashCode.Combine(StoreSequence, EventTimestamp);
 
     private sealed class NullDocumentExporterEvent : EventFact
     {
         public NullDocumentExporterEvent()
         {
-            EventStoreSequenceId = long.MinValue;
-            AggregateSequenceId = int.MinValue;
+            StoreSequence = long.MinValue;
+            AggregateSequence = int.MinValue;
             EventType = "Undefined";
             EventTimestamp = DateTimeOffset.MinValue;
             CorrelationId = Guid.Empty;

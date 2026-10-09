@@ -17,7 +17,7 @@ public interface IRepository<out T> where T : AggregateRoot
     /// <summary>
     /// Persists aggregate changes using optimistic concurrency.
     /// </summary>
-    void Save(AggregateRoot aggregate, long expectedId);
+    void Save(AggregateRoot aggregate, long expectedAggregateSequence);
 
     /// <summary>
     /// Loads an aggregate by identifier.

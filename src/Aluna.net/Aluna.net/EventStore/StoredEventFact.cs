@@ -8,10 +8,10 @@ public partial class SqlServerEventStore
     {
         private readonly string eventMessage;
         private readonly string readedEventType;
-        public StoredEventFact(long eventStoreSequenceId, int aggregateSequenceId, string eventType, DateTimeOffset eventTimestamp, Guid eventTraceId, string eventMessage, string? userId)
+        public StoredEventFact(long storeSequence, int aggregateSequence, string eventType, DateTimeOffset eventTimestamp, Guid eventTraceId, string eventMessage, string? userId)
         {
-            EventStoreSequenceId = eventStoreSequenceId;
-            AggregateSequenceId = aggregateSequenceId;
+            StoreSequence = storeSequence;
+            AggregateSequence = aggregateSequence;
             readedEventType = eventType;
             EventTimestamp = eventTimestamp;
             CorrelationId = eventTraceId;

@@ -173,8 +173,8 @@ public partial class SqlServerEventStore : IAlunaEventStore
         return new StoredAggregateEventFact(
             aggregateId: row.AggregateId, 
             domainEvent: ToDomainEventFact(row), 
-            eventStoreSequenceId: row.EventSequenceId, 
-            aggregateSequenceId: row.AggregateSequence);
+            storeSequence: row.EventSequenceId, 
+            aggregateSequence: row.AggregateSequence);
     }
 
     private EventFact ToDomainEventFact(EventRecord row)
@@ -184,8 +184,8 @@ public partial class SqlServerEventStore : IAlunaEventStore
         if (eventFact != null) { return eventFact; }
 
         return new StoredEventFact(
-            eventStoreSequenceId: row.EventSequenceId,
-            aggregateSequenceId: row.AggregateSequence,
+            storeSequence: row.EventSequenceId,
+            aggregateSequence: row.AggregateSequence,
             eventType: row.EventType,
             eventTimestamp: DateTime.SpecifyKind(row.OccurredUtc, DateTimeKind.Utc),
             eventTraceId: row.CorrelationId ?? Guid.Empty,
@@ -201,12 +201,12 @@ public partial class SqlServerEventStore : IAlunaEventStore
         public override string EventType => DomainEvent.EventType;
         public override string EventMessage => DomainEvent.EventMessage;
 
-        public StoredAggregateEventFact(Guid aggregateId, EventFact domainEvent, long eventStoreSequenceId, int aggregateSequenceId)
+        public StoredAggregateEventFact(Guid aggregateId, EventFact domainEvent, long storeSequence, int aggregateSequence)
         {
             AggregateId = aggregateId;
             DomainEvent = domainEvent;
-            EventStoreSequenceId = eventStoreSequenceId;
-            AggregateSequenceId = aggregateSequenceId;
+            StoreSequence = storeSequence;
+            AggregateSequence = aggregateSequence;
             CorrelationId = domainEvent.CorrelationId;
             EventTimestamp = domainEvent.EventTimestamp;
             UserId = domainEvent.UserId;
@@ -334,7 +334,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
         return $"[{identifier.Replace("]", "]]")}]";
     }
 
-    public long GetEventSequenceId(Guid eventId)
+    public long GetSequenceByEventId(Guid eventId)
     {
         if (eventId == Guid.Empty)
         {
