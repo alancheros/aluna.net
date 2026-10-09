@@ -39,7 +39,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
 
         var currentSequence = connection.ExecuteScalar<long>(
             getCurrentSequenceSql,
-            new { StreamType = streamId.StreamName, AggregateId = streamId.AggregateId },
+            new { StreamName = streamId.StreamName, AggregateId = streamId.AggregateId },
             transaction);
 
         if (expectedAggregateSequence >= 0 && expectedAggregateSequence != currentSequence)
@@ -87,7 +87,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
             {
                 EventId = Guid.NewGuid(),
                 AggregateId = streamId.AggregateId,
-                StreamType = streamId.StreamName,
+                SteamName = streamId.StreamName,
                 EventType = source.EventType,
                 AggregateSequence = (int)streamVersionLong,
                 OccurredUtc = source.EventTimestamp.UtcDateTime,
@@ -133,7 +133,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
             """;
 
         using var connection = OpenConnection();
-        var records = connection.Query<EventRecord>(sql, new { StreamType = streamId.StreamName, AggregateId = streamId.AggregateId });
+        var records = connection.Query<EventRecord>(sql, new { StreamName = streamId.StreamName, AggregateId = streamId.AggregateId });
 
         return records
             .Select(ToDomainEventFact)
@@ -161,7 +161,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
             """;
 
         using var connection = OpenConnection();
-        var records = connection.Query<EventRecord>(sql, new { StreamType = streamName, FromEventId = fromEventId, MaxCount = maxCount });
+        var records = connection.Query<EventRecord>(sql, new { StreamName = streamName, FromEventId = fromEventId, MaxCount = maxCount });
 
         return records
             .Select(ToStoredAggregateEventFact)
