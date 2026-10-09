@@ -7,13 +7,13 @@ internal static partial class RepositoryLog
     [LoggerMessage(
         EventId = 2000,
         Level = LogLevel.Information,
-        Message = "Save started for aggregate {AggregateType} with id {AggregateId} in stream {StreamName}. expectedId={ExpectedId}")]
+        Message = "Save started for aggregate {aggregateType} with id {AggregateId} in stream {StreamName}. expectedId={expectedAggregateSequence}")]
     internal static partial void SaveStarted(
         ILogger logger,
         string aggregateType,
         Guid aggregateId,
         string streamName,
-        long expectedId);
+        long expectedAggregateSequence);
 
     [LoggerMessage(
         EventId = 2001,
@@ -29,13 +29,13 @@ internal static partial class RepositoryLog
     [LoggerMessage(
         EventId = 2002,
         Level = LogLevel.Error,
-        Message = "Save failed for aggregate {AggregateType} with id {AggregateId} in stream {StreamName}. expectedId={ExpectedId}. elapsedMs={ElapsedMs}")]
+        Message = "Save failed for aggregate {aggregateType} with id {AggregateId} in stream {StreamName}. expectedId={expectedAggregateSequence}. elapsedMs={ElapsedMs}")]
     internal static partial void SaveFailed(
         ILogger logger,
         string aggregateType,
         Guid aggregateId,
         string streamName,
-        long expectedId,
+        long expectedAggregateSequence,
         double elapsedMs,
         Exception exception);
 

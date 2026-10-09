@@ -20,8 +20,8 @@ namespace Aluna.test.AccountTests
             HasException.Should().BeFalse();
             var account = repository.GetById(jobId);
             account.Should().NotBeNull();
-            account.Id.AggregateId.Should().Be(jobId);
-            account.Id.Name.Should().Be(Account.STREAM_NAME);
+            account.StreamKey.AggregateId.Should().Be(jobId);
+            account.StreamKey.StreamName.Should().Be(Account.STREAM_NAME);
             account.CreatedAtUtc.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(1));
             account.SequenceIndices.AggregateIndex.Should().Be(0);
             account.SequenceIndices.StoreIndex.Should().Be(0L);

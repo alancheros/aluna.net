@@ -8,7 +8,7 @@ public interface IDomainObject
     /// <summary>
     /// Gets the aggregate identifier and stream information.
     /// </summary>
-    AggregateStreamAndId Id { get; }
+    AggregateStreamKey StreamKey { get; }
 
     /// <summary>
     /// Applies historical events to rebuild aggregate state.

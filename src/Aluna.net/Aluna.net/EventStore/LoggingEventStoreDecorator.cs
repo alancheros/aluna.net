@@ -10,12 +10,12 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
     private readonly ILogger<LoggingEventStoreDecorator> _logger;
 
 
-    public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
+    public AppendResult AppendEvents(AggregateStreamKey streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
     {
         ArgumentNullException.ThrowIfNull(streamId);
         ArgumentNullException.ThrowIfNull(events);
 
-        using var scope = AlunaEventStoreLogs.BeginAggregateScope(_logger, streamId.Name, streamId.AggregateId, expectedAggregateSequence);
+        using var scope = AlunaEventStoreLogs.BeginAggregateScope(_logger, streamId.StreamName, streamId.AggregateId, expectedAggregateSequence);
         
         AlunaEventStoreLogs.AppendStarted(_logger);
 
@@ -27,7 +27,7 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
         }
         catch (Exception ex)
         {
-            AlunaEventStoreLogs.AppendFailed(_logger, ex, streamId.Name, streamId.AggregateId, expectedAggregateSequence);
+            AlunaEventStoreLogs.AppendFailed(_logger, ex, streamId.StreamName, streamId.AggregateId, expectedAggregateSequence);
             throw;
         }
     }
@@ -49,21 +49,21 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
         }
     }
 
-    public IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamAndId streamId)
+    public IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamKey streamId)
     {
         ArgumentNullException.ThrowIfNull(streamId);
 
-        AlunaEventStoreLogs.GetAggregateStarted(_logger, streamId.Name, streamId.AggregateId);
+        AlunaEventStoreLogs.GetAggregateStarted(_logger, streamId.StreamName, streamId.AggregateId);
 
         try
         {
             var events = _inner.GetEventsForAggregate(streamId).ToArray();
-            AlunaEventStoreLogs.GetAggregateCompleted(_logger, streamId.Name, streamId.AggregateId, events.Length);
+            AlunaEventStoreLogs.GetAggregateCompleted(_logger, streamId.StreamName, streamId.AggregateId, events.Length);
             return events;
         }
         catch (Exception ex)
         {
-            AlunaEventStoreLogs.GetAggregateFailed(_logger, ex, streamId.Name, streamId.AggregateId);
+            AlunaEventStoreLogs.GetAggregateFailed(_logger, ex, streamId.StreamName, streamId.AggregateId);
             throw;
         }
     }

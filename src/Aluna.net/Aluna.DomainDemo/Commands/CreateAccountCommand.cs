@@ -8,7 +8,7 @@ public class CreateAccountCommand : CreateNewAggregateCommand
     {
         if (id == Guid.Empty)
         {
-            throw new ArgumentException("Id cannot be empty", nameof(id));
+            throw new ArgumentException("StreamKey cannot be empty", nameof(id));
         }
         AggregateId = id;
         UserId = userId;

@@ -8,7 +8,7 @@ public abstract class Command : Message
     /// <summary>
     /// Gets the expected event identifier used for optimistic concurrency.
     /// </summary>
-    public long ExpectedId { get; init; } = long.MinValue;
+    public long ExpectedAggregateSequence { get; init; } = long.MinValue;
 }
 
 /// <summary>

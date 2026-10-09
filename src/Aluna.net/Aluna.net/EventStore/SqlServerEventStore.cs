@@ -15,12 +15,12 @@ public partial class SqlServerEventStore : IAlunaEventStore
 
     private readonly IEventFactFactory _eventFactory;
 
-    public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
+    public AppendResult AppendEvents(AggregateStreamKey streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
     {
         ArgumentNullException.ThrowIfNull(streamId);
         ArgumentNullException.ThrowIfNull(events);
 
-        if (string.IsNullOrWhiteSpace(streamId.Name))
+        if (string.IsNullOrWhiteSpace(streamId.StreamName))
         {
             throw new ArgumentException("Stream name is required.", nameof(streamId));
         }
@@ -39,12 +39,12 @@ public partial class SqlServerEventStore : IAlunaEventStore
 
         var currentSequence = connection.ExecuteScalar<long>(
             getCurrentSequenceSql,
-            new { StreamType = streamId.Name, AggregateId = streamId.AggregateId },
+            new { StreamType = streamId.StreamName, AggregateId = streamId.AggregateId },
             transaction);
 
         if (expectedAggregateSequence >= 0 && expectedAggregateSequence != currentSequence)
         {
-            throw new InvalidOperationException($"Concurrency conflict on stream '{streamId.Name}:{streamId.AggregateId}'. Expected last id {expectedAggregateSequence}, actual {currentSequence}.");
+            throw new InvalidOperationException($"Concurrency conflict on stream '{streamId.StreamName}:{streamId.AggregateId}'. Expected last id {expectedAggregateSequence}, actual {currentSequence}.");
         }
 
         if (batch.Length == 0)
@@ -80,14 +80,14 @@ public partial class SqlServerEventStore : IAlunaEventStore
             var streamVersionLong = currentSequence + index + 1;
             if (streamVersionLong > int.MaxValue)
             {
-                throw new InvalidOperationException($"Stream version overflow for stream '{streamId.Name}:{streamId.AggregateId}'.");
+                throw new InvalidOperationException($"Stream version overflow for stream '{streamId.StreamName}:{streamId.AggregateId}'.");
             }
 
             rows.Add(new
             {
                 EventId = Guid.NewGuid(),
                 AggregateId = streamId.AggregateId,
-                StreamType = streamId.Name,
+                StreamType = streamId.StreamName,
                 EventType = source.EventType,
                 AggregateSequence = (int)streamVersionLong,
                 OccurredUtc = source.EventTimestamp.UtcDateTime,
@@ -115,11 +115,11 @@ public partial class SqlServerEventStore : IAlunaEventStore
         return new AppendResult(lastEventId, batch.Length, true, string.Empty);
     }
 
-    public IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamAndId streamId)
+    public IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamKey streamId)
     {
         ArgumentNullException.ThrowIfNull(streamId);
 
-        if (string.IsNullOrWhiteSpace(streamId.Name))
+        if (string.IsNullOrWhiteSpace(streamId.StreamName))
         {
             throw new ArgumentException("Stream name is required.", nameof(streamId));
         }
@@ -133,7 +133,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
             """;
 
         using var connection = OpenConnection();
-        var records = connection.Query<EventRecord>(sql, new { StreamType = streamId.Name, AggregateId = streamId.AggregateId });
+        var records = connection.Query<EventRecord>(sql, new { StreamType = streamId.StreamName, AggregateId = streamId.AggregateId });
 
         return records
             .Select(ToDomainEventFact)

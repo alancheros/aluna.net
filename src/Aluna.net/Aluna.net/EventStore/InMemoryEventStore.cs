@@ -7,22 +7,22 @@ public class InMemoryEventStore : IAlunaEventStore
     private readonly Dictionary<Guid, long> eventSequence = new();
     private readonly Lock _sync = new();
 
-    public AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
+    public AppendResult AppendEvents(AggregateStreamKey streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
     {
         ArgumentNullException.ThrowIfNull(events);
         ArgumentNullException.ThrowIfNull(streamId);
 
-        if (string.IsNullOrWhiteSpace(streamId.Name))
+        if (string.IsNullOrWhiteSpace(streamId.StreamName))
         {
             throw new ArgumentException("Stream name is required.", nameof(streamId));
         }
 
         lock (_sync)
         {
-            if (!_streams.TryGetValue(streamId.Name, out var streamEvents))
+            if (!_streams.TryGetValue(streamId.StreamName, out var streamEvents))
             {
                 streamEvents = new List<StoredDocumentExporterEvent>();
-                _streams[streamId.Name] = streamEvents;
+                _streams[streamId.StreamName] = streamEvents;
             }
 
             var currentLastId = streamEvents.Count - 1;
@@ -53,14 +53,14 @@ public class InMemoryEventStore : IAlunaEventStore
         throw new EventSourcingException("The event is not in the store");
     }
 
-    public IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamAndId streamId)
+    public IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamKey streamId)
     {
         ArgumentNullException.ThrowIfNull(streamId);
-        if (string.IsNullOrWhiteSpace(streamId.Name)) throw new ArgumentException("Stream name is required.", nameof(streamId));
+        if (string.IsNullOrWhiteSpace(streamId.StreamName)) throw new ArgumentException("Stream name is required.", nameof(streamId));
 
         lock (_sync)
         {
-            if (!_streams.TryGetValue(streamId.Name, out var events) || events.Count == 0)
+            if (!_streams.TryGetValue(streamId.StreamName, out var events) || events.Count == 0)
                 return Array.Empty<EventFact>();
 
             return events

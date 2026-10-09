@@ -35,7 +35,7 @@ namespace Aluna.DomainDemo
                 throw new EventSourcingException($"Aggregate with id {command.AccountId} not found.");
             }
             item.ApplyEvent(new TransactionEvent(command));
-            _repository.Save(item, command.ExpectedId);
+            _repository.Save(item, command.ExpectedAggregateSequence);
             _repository.RefreshMemoryCache();
         }
 
@@ -44,7 +44,7 @@ namespace Aluna.DomainDemo
 
             var item = _repository.MakeNew();
             item.ApplyEvent(new AccountCreatedEvent(command));
-            _repository.Save(item, command.ExpectedId);
+            _repository.Save(item, command.ExpectedAggregateSequence);
             _repository.RefreshMemoryCache();
         }
 

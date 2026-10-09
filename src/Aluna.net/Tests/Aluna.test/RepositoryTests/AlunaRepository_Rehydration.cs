@@ -18,13 +18,13 @@ public class AlunaRepository_Rehydration
         var accountId1 = Guid.NewGuid();
         var accountId2 = Guid.NewGuid();
 
-        eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId1),
+        eventStore.AppendEvents(new AggregateStreamKey(Account.STREAM_NAME, accountId1),
         [
             new AccountCreatedEvent(accountId1),
             new TransactionEvent(10m){ EventStoreSequenceId = 1L}
         ]);
 
-        eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId2),
+        eventStore.AppendEvents(new AggregateStreamKey(Account.STREAM_NAME, accountId2),
         [
             new AccountCreatedEvent(accountId2),
             new TransactionEvent(5m){ EventStoreSequenceId = 2L },
@@ -49,7 +49,7 @@ public class AlunaRepository_Rehydration
         var repository = new AccountRepository(eventStore);
 
         var accountId = Guid.NewGuid();
-        eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId),
+        eventStore.AppendEvents(new AggregateStreamKey(Account.STREAM_NAME, accountId),
         [
             new AccountCreatedEvent(accountId),
             new TransactionEvent(20m){ EventStoreSequenceId = 1L }
@@ -78,7 +78,7 @@ public class AlunaRepository_Rehydration
         var repository = new AccountRepository(eventStore);
 
         var accountId = Guid.NewGuid();
-        eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId),
+        eventStore.AppendEvents(new AggregateStreamKey(Account.STREAM_NAME, accountId),
         [
             new TransactionEvent(25m)
         ]);
@@ -98,7 +98,7 @@ public class AlunaRepository_Rehydration
         var repository = new AccountRepository(eventStore);
 
         var accountId = Guid.NewGuid();
-        eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId),
+        eventStore.AppendEvents(new AggregateStreamKey(Account.STREAM_NAME, accountId),
         [
             new AccountCreatedEvent(accountId),
             new TransactionEvent(100m)
@@ -121,13 +121,13 @@ public class AlunaRepository_Rehydration
         var accountId = Guid.NewGuid();
         var otherStreamAggregateId = Guid.NewGuid();
 
-        eventStore.AppendEvents(new AggregateStreamAndId(Account.STREAM_NAME, accountId),
+        eventStore.AppendEvents(new AggregateStreamKey(Account.STREAM_NAME, accountId),
         [
             new AccountCreatedEvent(accountId),
             new TransactionEvent(20m)
         ]);
 
-        eventStore.AppendEvents(new AggregateStreamAndId("OTHER_STREAM", otherStreamAggregateId),
+        eventStore.AppendEvents(new AggregateStreamKey("OTHER_STREAM", otherStreamAggregateId),
         [
             new AccountCreatedEvent(otherStreamAggregateId)
         ]);

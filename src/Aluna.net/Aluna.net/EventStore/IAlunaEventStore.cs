@@ -20,7 +20,7 @@ public partial interface IAlunaEventStore
     /// <returns>
     /// The last persisted event id after the append operation completes.
     /// </returns>
-    AppendResult AppendEvents(AggregateStreamAndId streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1);
+    AppendResult AppendEvents(AggregateStreamKey streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1);
 
     /// <summary>
     /// Reads events from the specified stream.
@@ -38,7 +38,7 @@ public partial interface IAlunaEventStore
     /// </summary>
     /// <param name="streamId">The aggregate stream and id to get events for.</param>
     /// <returns>A sequence of events for the specified aggregate.</returns>
-    IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamAndId streamId);
+    IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamKey streamId);
 
     /// <summary>
     /// Gets the sequence id of the specified event in the event store.

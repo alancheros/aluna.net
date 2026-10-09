@@ -71,7 +71,7 @@ public sealed partial class Account : AggregateRoot, IDomainObject
         if (clearAggregate)
         {
             // Reset aggregate state before replaying history
-            Id = AggregateStreamAndId.NullObject;
+            StreamKey = AggregateStreamKey.NullObject;
             SequenceIndices.Clear();
             Status = DocumentExportJobStatus.Undefined;
             _extensions.Clear();
@@ -105,6 +105,6 @@ public sealed partial class Account : AggregateRoot, IDomainObject
 
     public Account(int contractVersion) : base(contractVersion)
     {
-        Id = AggregateStreamAndId.NullObject;
+        StreamKey = AggregateStreamKey.NullObject;
     }
 }

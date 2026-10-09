@@ -45,7 +45,7 @@ public sealed class InMemoryAggregateStore<TAggregate> where TAggregate : Aggreg
     {
         lock (_gate)
         {
-            _byId[aggregate.Id.AggregateId] = aggregate;
+            _byId[aggregate.StreamKey.AggregateId] = aggregate;
         }
     }
 

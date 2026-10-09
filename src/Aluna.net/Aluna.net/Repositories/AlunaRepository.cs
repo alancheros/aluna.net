@@ -28,7 +28,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
     {
         ArgumentNullException.ThrowIfNull(aggregate);
         if (expectedId == long.MinValue) { expectedId = aggregate.SequenceIndices.AggregateIndex; }
-        var appendedResult = _eventStore.AppendEvents(aggregate.Id, aggregate.GetUncommittedEvents(), expectedId);
+        var appendedResult = _eventStore.AppendEvents(aggregate.StreamKey, aggregate.GetUncommittedEvents(), expectedId);
         if (appendedResult.Success)
         {
             aggregate.MarkEventsAsCommitted(appendedResult.AppendedCount);
@@ -61,9 +61,9 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         for (int i = 0; i < createdAggregates.Count; i++)
         {
             var aggregate = createdAggregates[i];
-            if (!aggregates.Contains(aggregate.Id.AggregateId))
+            if (!aggregates.Contains(aggregate.StreamKey.AggregateId))
             {
-                aggregates.Add(aggregate.Id.AggregateId, aggregate);
+                aggregates.Add(aggregate.StreamKey.AggregateId, aggregate);
                 movedIndexes.Add(i);
             }
         }
@@ -73,7 +73,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         }
     }
 
-    public void Attach(AggregateRoot aggregate) => aggregates.Add(aggregate.Id.AggregateId, (T)aggregate);
+    public void Attach(AggregateRoot aggregate) => aggregates.Add(aggregate.StreamKey.AggregateId, (T)aggregate);
 
     public HydrationSummary RehydrateFromStoreIndex(long storeIndex)
     {

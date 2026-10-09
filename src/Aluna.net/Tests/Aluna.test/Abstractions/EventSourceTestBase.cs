@@ -37,7 +37,7 @@ public abstract class EventSourceTestBase<T> : IAsyncLifetime where T : Aggregat
 
                 if (historyEvents.Length > 0)
                 {
-                    eventStore.AppendEvents(sut.Id, historyEvents);
+                    eventStore.AppendEvents(sut.StreamKey, historyEvents);
                 }
             }
             foreach (var command in ThenGivenCommands())

@@ -13,7 +13,7 @@ public abstract class AggregateRoot : IDomainObject
     /// <summary>
     /// Gets or sets the aggregate identifier and stream information.
     /// </summary>
-    public AggregateStreamAndId Id { get; set; }
+    public AggregateStreamKey StreamKey { get; set; }
 
     /// <summary>
     /// Returns the events that have not been committed yet.
@@ -48,7 +48,7 @@ public abstract class AggregateRoot : IDomainObject
             throw new ArgumentOutOfRangeException(nameof(contractVersion), "Contract version must be a non-negative integer.");
         }
         ContractVersion = contractVersion;
-        Id = AggregateStreamAndId.NullObject;
+        StreamKey = AggregateStreamKey.NullObject;
     }
 
     public class SequenceInfo

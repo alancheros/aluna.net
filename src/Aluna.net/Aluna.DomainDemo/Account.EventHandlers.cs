@@ -42,7 +42,7 @@ public partial class Account
 
     private bool ApplyEvent(AccountCreatedEvent e)
     {
-        Id = new AggregateStreamAndId(STREAM_NAME, e.Id);
+        StreamKey = new AggregateStreamKey(STREAM_NAME, e.Id);
         CreatedAtUtc = DateTimeOffset.UtcNow;
         return true;
     }

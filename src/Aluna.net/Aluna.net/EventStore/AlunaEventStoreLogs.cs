@@ -35,8 +35,8 @@ internal static partial class AlunaEventStoreLogs
     
     
 
-    [LoggerMessage(EventId = 1002, Level = LogLevel.Error, Message = "Append failed. Stream={StreamName}, AggregateId={AggregateId}, ExpectedId={ExpectedId}")]
-    public static partial void AppendFailed(ILogger logger, Exception exception, string streamName, Guid aggregateId, long expectedId);
+    [LoggerMessage(EventId = 1002, Level = LogLevel.Error, Message = "Append failed. Stream={StreamName}, AggregateId={AggregateId}, ExpectedAggregateSequence={expectedAggregateSequence}")]
+    public static partial void AppendFailed(ILogger logger, Exception exception, string streamName, Guid aggregateId, long expectedAggregateSequence);
 
     [LoggerMessage(EventId = 1010, Level = LogLevel.Debug, Message = "Reading events. Stream={StreamName}, FromEventId={FromEventId}, MaxCount={MaxCount}")]
     public static partial void ReadStarted(ILogger logger, string streamName, long fromEventId, int maxCount);
