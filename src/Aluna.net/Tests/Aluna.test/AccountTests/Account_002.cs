@@ -18,7 +18,7 @@ public class Account_002 : AccountTestBase
         yield return new AccountCreatedEvent(accountId);
     }
 
-    public override Command? When() => new TransactionCommand(accountId, 100) { ExpectedAggregateSequence = 1 };
+    public override Command? When() => new TransactionCommand(accountId, 100) { ExpectedAggregateSequence = 0 };
 
     [Fact]
     [Trait("Category", "DocumentExportJob")]

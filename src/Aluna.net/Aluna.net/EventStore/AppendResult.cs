@@ -2,13 +2,13 @@
 
 public record AppendResult
 {
-    public long LastEventSequence { get; init; }
+    public long LastInsertedStoreSequence { get; init; }
     public bool Success { get; init; }
     public string? ErrorMessage { get; init; }
     public int AppendedCount { get; init; }
-    public AppendResult(long lastEventSequence, int appendedCount, bool success, string errorMessage)
+    public AppendResult(long lastInsertedStoreSequence, int appendedCount, bool success, string errorMessage)
     {
-        LastEventSequence = lastEventSequence;
+        LastInsertedStoreSequence = lastInsertedStoreSequence;
         Success = success;
         ErrorMessage = errorMessage;
         AppendedCount = appendedCount;

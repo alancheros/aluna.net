@@ -33,7 +33,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         {
             aggregate.MarkEventsAsCommitted(appendedResult.AppendedCount);
             aggregate.SequenceIndices.IncrementAggregateIndex(appendedResult.AppendedCount);
-            aggregate.SequenceIndices.StoreSequence = appendedResult.LastEventSequence;
+            aggregate.SequenceIndices.StoreSequence = appendedResult.LastInsertedStoreSequence;
         }
     }
 

@@ -1,5 +1,4 @@
 ﻿using Aluna.Abstractions;
-using System.Reflection.Metadata;
 
 namespace Aluna.EventStore;
 
@@ -11,7 +10,7 @@ public partial interface IAlunaEventStore
     /// <summary>
     /// Appends one or more events to the specified stream.
     /// </summary>
-    /// <param name="streamId">The logical stream name to append events to.</param>
+    /// <param name="key">The aggregate stream key.</param>
     /// <param name="events">The events to append, in write order.</param>
     /// <param name="expectedAggregateSequence">
     /// The expected last event id in the stream for optimistic concurrency checks.
@@ -20,7 +19,7 @@ public partial interface IAlunaEventStore
     /// <returns>
     /// The last persisted event id after the append operation completes.
     /// </returns>
-    AppendResult AppendEvents(AggregateStreamKey streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1);
+    AppendResult AppendEvents(AggregateStreamKey key, IEnumerable<EventFact> events, long expectedAggregateSequence = -1);
 
     /// <summary>
     /// Reads events from the specified stream.

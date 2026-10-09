@@ -20,7 +20,7 @@ public class Account_003 : AccountTestBase
         yield return new TransactionEvent(-5m) { StoreSequence = 3L };
             
     }
-    public override Command? When() => new TransactionCommand(accountId, 100) { ExpectedAggregateSequence = 4L };
+    public override Command? When() => new TransactionCommand(accountId, 100) { ExpectedAggregateSequence = 3 };
 
     [Fact]
     [Trait("Category", "DocumentExportJob")]
@@ -33,6 +33,6 @@ public class Account_003 : AccountTestBase
         account.LastEvent.Should().BeOfType<TransactionEvent>();
         account.LastEvent.As<TransactionEvent>().Amount.Should().Be(100m);
         account.SequenceIndices.AggregateSequence.Should().Be(4);
-        account.SequenceIndices.StoreSequence.Should().Be(4);
+        account.SequenceIndices.StoreSequence.Should().Be(5);
     }
 }

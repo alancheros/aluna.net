@@ -24,7 +24,7 @@ namespace Aluna.test.AccountTests
             account.StreamKey.StreamName.Should().Be(Account.STREAM_NAME);
             account.CreatedAtUtc.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(1));
             account.SequenceIndices.AggregateSequence.Should().Be(0);
-            account.SequenceIndices.StoreSequence.Should().Be(1L);
+            account.SequenceIndices.StoreSequence.Should().Be(1);
         }
 
         public override IEnumerable<EventFact> Given() => [];

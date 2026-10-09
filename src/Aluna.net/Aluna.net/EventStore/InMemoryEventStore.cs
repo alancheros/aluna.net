@@ -3,45 +3,60 @@ namespace Aluna.EventStore;
 
 public class InMemoryEventStore : IAlunaEventStore
 {
-    private readonly Dictionary<string, List<StoredAggregateEvent>> _streams = new();
+    private long _storeSequence = 0;
+    private readonly Dictionary<string, Dictionary<Guid, List<StoredAggregateEvent>>> _streams = new();
+
     private readonly Dictionary<Guid, long> eventSequence = new();
     private readonly Lock _sync = new();
 
-    public AppendResult AppendEvents(AggregateStreamKey streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
+    public AppendResult AppendEvents(AggregateStreamKey key, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
     {
         ArgumentNullException.ThrowIfNull(events);
-        ArgumentNullException.ThrowIfNull(streamId);
+        ArgumentNullException.ThrowIfNull(key);
 
-        if (string.IsNullOrWhiteSpace(streamId.StreamName))
+        if (string.IsNullOrWhiteSpace(key.StreamName))
         {
-            throw new ArgumentException("Stream name is required.", nameof(streamId));
+            throw new ArgumentException("Stream name is required.", nameof(key));
         }
 
         lock (_sync)
         {
-            if (!_streams.TryGetValue(streamId.StreamName, out var streamEvents))
-            {
-                streamEvents = new List<StoredAggregateEvent>();
-                _streams[streamId.StreamName] = streamEvents;
-            }
+            List<StoredAggregateEvent> streamEvents = GetOrCreateStreamEvents(key);
 
-            var currentLastId = streamEvents.Count;
+            var currentLastId = streamEvents.Count - 1;
             if (expectedAggregateSequence >= 0 && expectedAggregateSequence != currentLastId)
             {
-                throw new InvalidOperationException($"Concurrency conflict on stream '{streamId}'. Expected last id {expectedAggregateSequence}, actual {currentLastId}.");
+                throw new InvalidOperationException($"Concurrency conflict on stream '{key}'. Expected last id {expectedAggregateSequence}, actual {currentLastId}.");
             }
 
             foreach (var sourceEvent in events)
             {
-                var nextId = currentLastId + 1;
-                var storedEvent = new StoredAggregateEvent(sourceEvent, streamId.AggregateId, nextId, nextId);
+                _storeSequence++;
+                var storedEvent = new StoredAggregateEvent(sourceEvent, key.AggregateId, _storeSequence, currentLastId + 1);
                 streamEvents.Add(storedEvent);
-                currentLastId = nextId;
+                currentLastId = storedEvent.AggregateSequence;
                 eventSequence.Add(storedEvent.EventId, storedEvent.StoreSequence);
             }
 
-            return new AppendResult(currentLastId, events.Count(), true, string.Empty);
+            return new AppendResult(_storeSequence, events.Count(), true, string.Empty);
         }
+    }
+
+    private List<StoredAggregateEvent> GetOrCreateStreamEvents(AggregateStreamKey key)
+    {
+        if (!_streams.TryGetValue(key.StreamName, out var stream))
+        {
+            stream = [];
+            _streams[key.StreamName] = stream;
+        }
+
+        if (!stream.TryGetValue(key.AggregateId, out var aggregateEvents))
+        {
+            aggregateEvents = [];
+            stream[key.AggregateId] = aggregateEvents;
+        }
+
+        return aggregateEvents;
     }
 
     public long GetSequenceByEventId(Guid eventId)
@@ -60,11 +75,12 @@ public class InMemoryEventStore : IAlunaEventStore
 
         lock (_sync)
         {
-            if (!_streams.TryGetValue(streamId.StreamName, out var events) || events.Count == 0)
+            if (!_streams.TryGetValue(streamId.StreamName, out var aggregateStreams)
+                || !aggregateStreams.TryGetValue(streamId.AggregateId, out var events)
+                || events.Count == 0)
                 return Array.Empty<EventFact>();
 
             return events
-                .Where(x => x.AggregateId == streamId.AggregateId)
                 .OrderBy(x => x.AggregateSequence)
                 .Select(x => x.Event)
                 .ToArray();
@@ -80,8 +96,10 @@ public class InMemoryEventStore : IAlunaEventStore
 
         lock (_sync)
         {
-            if (!_streams.TryGetValue(streamName, out var events) || events.Count == 0)
+            if (!_streams.TryGetValue(streamName, out var aggregateStreams) || aggregateStreams.Count == 0)
                 return Array.Empty<EventFact>();
+
+            var events = aggregateStreams.Values.SelectMany(x => x);
 
             return events
                 .Where(x => x.StoreSequence >= fromEventId)
