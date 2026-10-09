@@ -25,7 +25,7 @@ public class InMemoryEventStore : IAlunaEventStore
                 _streams[streamId.StreamName] = streamEvents;
             }
 
-            var currentLastId = streamEvents.Count - 1;
+            var currentLastId = streamEvents.Count;
             if (expectedAggregateSequence >= 0 && expectedAggregateSequence != currentLastId)
             {
                 throw new InvalidOperationException($"Concurrency conflict on stream '{streamId}'. Expected last id {expectedAggregateSequence}, actual {currentLastId}.");

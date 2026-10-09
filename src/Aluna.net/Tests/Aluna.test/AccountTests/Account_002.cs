@@ -12,11 +12,13 @@ namespace Aluna.test.AccountTests;
 public class Account_002 : AccountTestBase
 {
     private readonly Guid accountId = Guid.NewGuid();
+
     public override IEnumerable<EventFact> Given()
     {
         yield return new AccountCreatedEvent(accountId);
     }
-    public override Command? When() => new TransactionCommand(accountId, 100);
+
+    public override Command? When() => new TransactionCommand(accountId, 100) { ExpectedAggregateSequence = 1 };
 
     [Fact]
     [Trait("Category", "DocumentExportJob")]

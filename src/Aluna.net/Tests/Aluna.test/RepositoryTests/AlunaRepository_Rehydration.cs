@@ -36,7 +36,7 @@ public class AlunaRepository_Rehydration
         summary.ProcessedEvents.Should().Be(5);
         summary.HydratedAggregates.Should().Be(2);
         summary.SkippedEvents.Should().Be(0);
-        summary.LastScannedStoreIndex.Should().Be(4);
+        summary.LastScannedStoreIndex.Should().Be(5);
 
         repository.GetById(accountId1).Balance.Should().Be(10m);
         repository.GetById(accountId2).Balance.Should().Be(3m);
@@ -64,7 +64,7 @@ public class AlunaRepository_Rehydration
         summary.ProcessedEvents.Should().Be(2);
         summary.HydratedAggregates.Should().Be(1);
         summary.SkippedEvents.Should().Be(0);
-        summary.LastScannedStoreIndex.Should().Be(1);
+        summary.LastScannedStoreIndex.Should().Be(2);
 
         var hydratedAggregate = repository.GetById(accountId);
         hydratedAggregate.Should().BeSameAs(existingAggregate);
@@ -88,7 +88,7 @@ public class AlunaRepository_Rehydration
         summary.ProcessedEvents.Should().Be(1);
         summary.HydratedAggregates.Should().Be(0);
         summary.SkippedEvents.Should().Be(1);
-        summary.LastScannedStoreIndex.Should().Be(0);
+        summary.LastScannedStoreIndex.Should().Be(1);
     }
 
     [Fact]
@@ -104,12 +104,12 @@ public class AlunaRepository_Rehydration
             new TransactionEvent(100m)
         ]);
 
-        var summary = repository.RehydrateFromStoreIndex(0);
+        var summary = repository.RehydrateFromStoreIndex(1);
 
         summary.ProcessedEvents.Should().Be(1);
         summary.HydratedAggregates.Should().Be(0);
         summary.SkippedEvents.Should().Be(1);
-        summary.LastScannedStoreIndex.Should().Be(1);
+        summary.LastScannedStoreIndex.Should().Be(2);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class AlunaRepository_Rehydration
         summary.ProcessedEvents.Should().Be(2);
         summary.HydratedAggregates.Should().Be(1);
         summary.SkippedEvents.Should().Be(0);
-        summary.LastScannedStoreIndex.Should().Be(1);
+        summary.LastScannedStoreIndex.Should().Be(2);
 
         Action readOther = () => repository.GetById(otherStreamAggregateId);
         readOther.Should().Throw<AggregateNotFoundException>();

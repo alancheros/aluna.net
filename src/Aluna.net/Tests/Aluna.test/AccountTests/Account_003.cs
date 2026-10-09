@@ -20,7 +20,7 @@ public class Account_003 : AccountTestBase
         yield return new TransactionEvent(-5m) { StoreSequence = 3L };
             
     }
-    public override Command? When() => new TransactionCommand(accountId, 100);
+    public override Command? When() => new TransactionCommand(accountId, 100) { ExpectedAggregateSequence = 4L };
 
     [Fact]
     [Trait("Category", "DocumentExportJob")]
