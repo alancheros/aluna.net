@@ -27,13 +27,13 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
     public void Save(AggregateRoot aggregate, long expectedAggregateSequence)
     {
         ArgumentNullException.ThrowIfNull(aggregate);
-        if (expectedAggregateSequence == long.MinValue) { expectedAggregateSequence = aggregate.SequenceIndices.AggregateIndex; }
+        if (expectedAggregateSequence == long.MinValue) { expectedAggregateSequence = aggregate.SequenceIndices.AggregateSequence; }
         var appendedResult = _eventStore.AppendEvents(aggregate.StreamKey, aggregate.GetUncommittedEvents(), expectedAggregateSequence);
         if (appendedResult.Success)
         {
             aggregate.MarkEventsAsCommitted(appendedResult.AppendedCount);
             aggregate.SequenceIndices.IncrementAggregateIndex(appendedResult.AppendedCount);
-            aggregate.SequenceIndices.StoreIndex = appendedResult.LastEventSequence;
+            aggregate.SequenceIndices.StoreSequence = appendedResult.LastEventSequence;
         }
     }
 

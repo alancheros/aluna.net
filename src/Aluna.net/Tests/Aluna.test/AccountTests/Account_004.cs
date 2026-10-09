@@ -28,6 +28,6 @@ public class Account_004 : AccountTestBase
 
         account.LastEvent.Should().BeOfType<TransactionEvent>();
         account.LastEvent.As<TransactionEvent>().Amount.Should().Be(-3m);
-        account.SequenceIndices.AggregateIndex.Should().Be(2);
+        account.SequenceIndices.AggregateSequence.Should().Be(2);
     }
 }

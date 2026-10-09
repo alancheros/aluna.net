@@ -23,8 +23,8 @@ namespace Aluna.test.AccountTests
             account.StreamKey.AggregateId.Should().Be(jobId);
             account.StreamKey.StreamName.Should().Be(Account.STREAM_NAME);
             account.CreatedAtUtc.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(1));
-            account.SequenceIndices.AggregateIndex.Should().Be(0);
-            account.SequenceIndices.StoreIndex.Should().Be(0L);
+            account.SequenceIndices.AggregateSequence.Should().Be(0);
+            account.SequenceIndices.StoreSequence.Should().Be(0L);
         }
 
         public override IEnumerable<EventFact> Given() => [];

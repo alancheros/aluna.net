@@ -32,7 +32,7 @@ public class Account_003 : AccountTestBase
         account.Balance.Should().Be(170);
         account.LastEvent.Should().BeOfType<TransactionEvent>();
         account.LastEvent.As<TransactionEvent>().Amount.Should().Be(100m);
-        account.SequenceIndices.AggregateIndex.Should().Be(4);
-        account.SequenceIndices.StoreIndex.Should().Be(4);
+        account.SequenceIndices.AggregateSequence.Should().Be(4);
+        account.SequenceIndices.StoreSequence.Should().Be(4);
     }
 }
