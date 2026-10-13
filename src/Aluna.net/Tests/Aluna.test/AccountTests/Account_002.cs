@@ -21,8 +21,8 @@ public class Account_002 : AccountTestBase
     public override Command? When() => new TransactionCommand(accountId, 100) { ExpectedAggregateSequence = 0 };
 
     [Fact]
-    [Trait("Category", "DocumentExportJob")]
-    public void AddDocument_WhenJobIsDraft_ShouldAddFirstDocument()
+    [Trait("Category", "Account")]
+    public void TransactionCommand_WhenAccountCreated_ShouldSetBalanceTo100()
     {
         HasException.Should().BeFalse(caught?.Message);
         repository.GetById(accountId).Balance.Should().Be(100);

@@ -19,7 +19,7 @@ public class Account_004 : AccountTestBase
     public override Command? When() => null;
 
     [Fact]
-    [Trait("Category", "DocumentExportJob")]
+    [Trait("Category", "Account")]
     public void LoadFromHistory_WhenEventsAreReplayed_ShouldSetLastEventAndAggregateSequence()
     {
         HasException.Should().BeFalse(caught?.Message);

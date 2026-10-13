@@ -23,8 +23,8 @@ public class Account_003 : AccountTestBase
     public override Command? When() => new TransactionCommand(accountId, 100) { ExpectedAggregateSequence = 3 };
 
     [Fact]
-    [Trait("Category", "DocumentExportJob")]
-    public void AddDocument_WhenJobIsDraft_ShouldAddFirstDocument()
+    [Trait("Category", "Account")]
+    public void ApplyTransaction_WhenExpectedAggregateSequenceIs3_ShouldUpdateBalanceAndSequences()
     {
         HasException.Should().BeFalse(caught?.Message);
         var account = repository.GetById(accountId);

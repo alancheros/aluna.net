@@ -13,9 +13,9 @@ namespace Aluna.test.AccountTests
         private readonly Guid jobId = Guid.NewGuid();
 
         [Fact]
-        [Trait("Category", "DocumentExportJob")]
+        [Trait("Category", "Account")]
         [Trait("Path", "Happy Path")]
-        public void CreateJob_WhenCommandIsHandled_ShouldCreateExportJob()
+        public void CreateAccount_WhenCommandIsHandled_ShouldCreateAccount()
         {
             HasException.Should().BeFalse();
             var account = repository.GetById(jobId);
