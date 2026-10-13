@@ -73,6 +73,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         }
     }
 
+
     public void Attach(AggregateRoot aggregate) => aggregates.Add(aggregate.StreamKey.AggregateId, (T)aggregate);
 
     public HydrationSummary RehydrateFromStoreIndex(long storeIndex)
@@ -136,6 +137,11 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         }
         lastScannedStoreIndex--;
         return new HydrationSummary(processedEvents, hydratedAggregates, skippedEvents, lastScannedStoreIndex);
+    }
+
+    public Task<HydrationSummary> RehydrateFromStoreIndexAsync(long storeIndex, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => RehydrateFromStoreIndex(storeIndex), cancellationToken);
     }
 
     private (bool isNew, AggregateRoot) GetOrCreateInstance(Guid key)

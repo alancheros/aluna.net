@@ -42,5 +42,15 @@ public interface IRepository<out T> where T : AggregateRoot
     /// <summary>
     /// Rehydrates aggregates from the repository stream using events after the provided store index.
     /// </summary>
+    /// <param name="storeIndex">The store index after which to rehydrate events.</param>
+    /// <returns>The hydration summary.</returns>
     HydrationSummary RehydrateFromStoreIndex(long storeIndex);
+
+    /// <summary>
+    /// Rehydrates aggregates from the repository stream using events after the provided store index asynchronously.
+    /// </summary>
+    /// <param name="storeIndex">The store index after which to rehydrate events.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the hydration summary.</returns>
+    Task<HydrationSummary> RehydrateFromStoreIndexAsync(long storeIndex, CancellationToken cancellationToken = default);
 }
