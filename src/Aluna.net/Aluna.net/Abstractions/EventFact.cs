@@ -22,6 +22,11 @@ public abstract class EventFact : Message
     /// Gets the sequential event identifier within the event store.
     /// </summary>
     public long StoreSequence { get; init; }
+    
+    /// <summary>
+    /// Gets the identifier of the aggregate associated with this event.
+    /// </summary>
+    public Guid AggregateId { get; init; }
 
     /// <summary>
     /// Gets the sequential event identifier within the aggregate.
@@ -110,7 +115,6 @@ public abstract class EventFact : Message
         public NullEventFact()
         {
             StoreSequence = long.MinValue;
-            AggregateSequence = int.MinValue;
             EventType = "Undefined";
             EventTimestamp = DateTimeOffset.MinValue;
             CorrelationId = Guid.Empty;

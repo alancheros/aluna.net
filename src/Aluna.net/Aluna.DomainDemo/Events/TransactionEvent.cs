@@ -9,6 +9,7 @@ public class TransactionEvent : Abstractions.EventFact
     public TransactionEvent(TransactionCommand command)
     {
         Amount = command.Amount;
+        AggregateId = command.AccountId;
     }
 
     public TransactionEvent(decimal amount)
