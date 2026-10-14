@@ -20,6 +20,8 @@ public class CommandResult
     /// </summary>
     public bool WasOmitted { get; set; } = false;
 
+    public string Message { get; set; } = string.Empty;
+
     /// <summary>
     /// Gets a predefined omitted result instance.
     /// </summary>
