@@ -10,13 +10,15 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
     private readonly ILogger<LoggingEventStoreDecorator> _logger;
 
 
-    public AppendResult AppendEvents(AggregateStreamKey streamId, IEnumerable<EventFact> events, long expectedAggregateSequence = -1)
+    public AppendResult AppendEvents(AggregateStreamKey streamId, IEnumerable<EventFact> events,
+        long expectedAggregateSequence = -1)
     {
         ArgumentNullException.ThrowIfNull(streamId);
         ArgumentNullException.ThrowIfNull(events);
 
-        using var scope = AlunaEventStoreLogs.BeginAggregateScope(_logger, streamId.StreamName, streamId.AggregateId, expectedAggregateSequence);
-        
+        using var scope = AlunaEventStoreLogs.BeginAggregateScope(_logger, streamId.StreamName, streamId.AggregateId,
+            expectedAggregateSequence);
+
         AlunaEventStoreLogs.AppendStarted(_logger);
 
         try
@@ -27,7 +29,8 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
         }
         catch (Exception ex)
         {
-            AlunaEventStoreLogs.AppendFailed(_logger, ex, streamId.StreamName, streamId.AggregateId, expectedAggregateSequence);
+            AlunaEventStoreLogs.AppendFailed(_logger, ex, streamId.StreamName, streamId.AggregateId,
+                expectedAggregateSequence);
             throw;
         }
     }
@@ -58,7 +61,8 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
         try
         {
             var events = _inner.GetEventsForAggregate(streamId).ToArray();
-            AlunaEventStoreLogs.GetAggregateCompleted(_logger, streamId.StreamName, streamId.AggregateId, events.Length);
+            AlunaEventStoreLogs.GetAggregateCompleted(_logger, streamId.StreamName, streamId.AggregateId,
+                events.Length);
             return events;
         }
         catch (Exception ex)
@@ -69,6 +73,9 @@ public sealed class LoggingEventStoreDecorator : IAlunaEventStore
     }
 
     public long GetSequenceByEventId(Guid eventId) => _inner.GetSequenceByEventId(eventId);
+    
+    public long GetFirstStoreSequenceByDate(DateTimeOffset dateTime) => _inner.GetFirstStoreSequenceByDate(dateTime);
+
 
     public LoggingEventStoreDecorator(IAlunaEventStore inner, ILogger<LoggingEventStoreDecorator> logger)
     {

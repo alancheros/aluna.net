@@ -45,4 +45,11 @@ public partial interface IAlunaEventStore
     /// <param name="eventId">The unique identifier of the event.</param>
     /// <returns>The sequence id of the event.</returns>
     long GetSequenceByEventId(Guid eventId);
+    
+    /// <summary>
+    /// Gets the first store sequence id for events that occurred on or after the specified date, time will not be considered.
+    /// </summary>
+    /// <param name="dateTime">The date and time to start searching from.</param>
+    /// <returns>The first store sequence id for events on or after the specified date.</returns>
+    long GetFirstStoreSequenceByDate(DateTimeOffset dateTime);
 }

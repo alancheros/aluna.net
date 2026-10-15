@@ -358,4 +358,25 @@ public partial class SqlServerEventStore : IAlunaEventStore
 
         return Convert.ToInt64(result);
     }
+
+    public long GetFirstStoreSequenceByDate(DateTimeOffset dateTime)
+    {
+        dateTime = dateTime.Date;
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = $@"
+            SELECT MIN([EventSequenceId])
+            FROM {_qualifiedTableName}
+            WHERE [OccurredUtc] >= @DateTime
+        ";
+        command.Parameters.AddWithValue("@DateTime", dateTime.UtcDateTime);
+
+        var result = command.ExecuteScalar();
+        if (result == null || result == DBNull.Value)
+        {
+            return 0;
+        }
+
+        return Convert.ToInt64(result);
+    }
 }
