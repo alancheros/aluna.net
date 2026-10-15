@@ -68,6 +68,21 @@ public class InMemoryEventStore : IAlunaEventStore
         throw new EventSourcingException("The event is not in the store");
     }
 
+    public long GetFirstStoreSequenceByDate(DateTimeOffset dateTime)
+    {
+        lock (_sync)
+        {
+            var firstEvent = _streams.Values
+                .SelectMany(stream => stream.Values)
+                .SelectMany(events => events)
+                .Where(e => e.EventTimestamp >= dateTime)
+                .OrderBy(e => e.StoreSequence)
+                .FirstOrDefault();
+
+            return firstEvent?.StoreSequence ?? 0;
+        }
+    }
+
     public IEnumerable<EventFact> GetEventsForAggregate(AggregateStreamKey streamId)
     {
         ArgumentNullException.ThrowIfNull(streamId);
