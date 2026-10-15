@@ -31,7 +31,7 @@ public abstract class EventFact : Message
     /// <summary>
     /// Gets the sequential event identifier within the aggregate.
     /// </summary>
-    public int AggregateSequence { get; init; }
+    public int AggregateSequence { get; init; } = int.MinValue;
 
     /// <summary>
     /// Gets the event type (started, completed, failed, and so on).

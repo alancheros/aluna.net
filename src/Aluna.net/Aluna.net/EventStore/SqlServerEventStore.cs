@@ -42,7 +42,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
             new { StreamName = streamId.StreamName, AggregateId = streamId.AggregateId },
             transaction);
 
-        if (expectedAggregateSequence >= 0 && expectedAggregateSequence != currentSequence)
+        if (expectedAggregateSequence >= 0 && expectedAggregateSequence - 1 != currentSequence)
         {
             throw new InvalidOperationException($"Concurrency conflict on stream '{streamId.StreamName}:{streamId.AggregateId}'. Expected last id {expectedAggregateSequence}, actual {currentSequence}.");
         }
@@ -171,9 +171,9 @@ public partial class SqlServerEventStore : IAlunaEventStore
     private EventFact ToStoredAggregateEventFact(EventRecord row)
     {
         return new StoredAggregateEventFact(
-            aggregateId: row.AggregateId, 
-            domainEvent: ToDomainEventFact(row), 
-            storeSequence: row.EventSequenceId, 
+            aggregateId: row.AggregateId,
+            domainEvent: ToDomainEventFact(row),
+            storeSequence: row.EventSequenceId,
             aggregateSequence: row.AggregateSequence);
     }
 

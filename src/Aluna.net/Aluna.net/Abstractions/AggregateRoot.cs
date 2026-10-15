@@ -58,7 +58,9 @@ public abstract class AggregateRoot : IDomainObject
         public long StoreSequence { get; internal set; }
         public int AggregateSequence { get => _aggregateSequence; }
 
-        public int IncrementAggregateIndex(int incrementBy) => Interlocked.Add(ref _aggregateSequence, incrementBy);
+        public int IncrementAggregateSequence(int incrementBy) => Interlocked.Add(ref _aggregateSequence, incrementBy);
+
+        public int SetAggregateSequence(int newValue) => Interlocked.Exchange(ref _aggregateSequence, newValue);
 
         public void Clear()
         {

@@ -88,7 +88,7 @@ public sealed partial class Account : AggregateRoot, IDomainObject
                 throw new EventSourcingException($"Failed to apply historical event '{exporterEvent.GetType().Name}'.");
             }
 
-            SequenceIndices.IncrementAggregateIndex(1);
+            SequenceIndices.IncrementAggregateSequence(1);
         }
 
         // Historical events are already committed; don't treat them as pending.
