@@ -53,4 +53,10 @@ public interface IRepository<out T> where T : AggregateRoot
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the hydration summary.</returns>
     Task<HydrationSummary> RehydrateFromStoreIndexAsync(long storeIndex, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Waits for all rehydration workers to complete their work.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous wait operation and completes when all rehydration workers have finished.</returns>
+    Task WaitForRehydrationWorkersAsync();
 }
