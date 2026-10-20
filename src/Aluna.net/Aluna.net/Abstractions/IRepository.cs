@@ -58,5 +58,5 @@ public interface IRepository<out T> where T : AggregateRoot
     /// Waits for all rehydration workers to complete their work.
     /// </summary>
     /// <returns>A task that represents the asynchronous wait operation and completes when all rehydration workers have finished.</returns>
-    Task WaitForRehydrationWorkersAsync();
+    Task WaitForRehydrationWorkersAsync(CancellationToken cancellationToken = default);
 }

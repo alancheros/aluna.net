@@ -203,11 +203,11 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         return new ReadPageResult(readPage.Length, lastScannedStoreIndex, skippedEvents, groupedEvents);
     }
 
-    public async Task WaitForRehydrationWorkersAsync()
+    public async Task WaitForRehydrationWorkersAsync(CancellationToken cancellationToken = default)
     {
         while (IsRehydrating)
         {
-            await Task.Delay(25).ConfigureAwait(false);
+            await Task.Delay(25, cancellationToken).ConfigureAwait(false);
         }
     }
 
