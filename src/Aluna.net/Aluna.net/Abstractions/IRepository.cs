@@ -7,7 +7,7 @@ namespace Aluna.Abstractions;
 /// <summary>
 /// Defines persistence operations for aggregate roots.
 /// </summary>
-public interface IRepository<out T> where T : AggregateRoot
+public interface IRepository<T> where T : AggregateRoot
 {
     /// <summary>
     /// Gets the stream name used by this repository.
@@ -59,4 +59,17 @@ public interface IRepository<out T> where T : AggregateRoot
     /// </summary>
     /// <returns>A task that represents the asynchronous wait operation and completes when all rehydration workers have finished.</returns>
     Task WaitForRehydrationWorkersAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sets the delegate used to create instances of <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="createInstanceFunc">Delegate that creates and returns an instance of <typeparamref name="T"/>.</param>
+    void SetCreateInstanceFunc(Func<T> createInstanceFunc);
+
+    /// <summary>
+    /// Gets the first index associated with the specified date.
+    /// </summary>
+    /// <param name="dateTime">The date to locate.</param>
+    /// <returns>The first index associated with the specified date.</returns>
+    long GetFirstIndexOfDate(DateTime dateTime);
 }

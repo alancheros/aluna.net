@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.ComponentModel;
+using System.Threading;
 using Aluna.Abstractions;
 using Aluna.EventStore;
 using Aluna.Exceptions;
@@ -16,11 +17,10 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
     public virtual string StreamName => typeof(T).Name; //The stream name is the name of the aggregate type by default. Override this in derived classes if you want a different stream name.
 
-    protected readonly InMemoryAggregateStore<T> aggregates = new();
+    protected internal readonly InMemoryAggregateStore<T> aggregates = new();
     private readonly List<T> createdAggregates = new();
 
-    protected virtual T CreateInstance()
-        => throw new NotImplementedException("CreateInstance must be implemented in derived classes.");
+    protected Func<T> CreateInstance = () => (T)Activator.CreateInstance(typeof(T), true)!;
 
     public T MakeNew()
     {
@@ -210,6 +210,13 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
             await Task.Delay(25, cancellationToken).ConfigureAwait(false);
         }
     }
+
+    public void SetCreateInstanceFunc(Func<T> createInstanceFunc)
+    {
+        CreateInstance = createInstanceFunc ?? throw new ArgumentNullException(nameof(createInstanceFunc));
+    }
+
+    public long GetFirstIndexOfDate(DateTime dateTime) => _eventStore.GetFirstStoreSequenceByDate(dateTime);
 
     public AlunaRepository(IAlunaEventStore eventStore)
     {
