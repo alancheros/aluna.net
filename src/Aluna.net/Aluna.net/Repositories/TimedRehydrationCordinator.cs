@@ -4,7 +4,7 @@ using System.Threading.Channels;
 
 namespace Aluna.Repositories
 {
-    internal class TimedRehydrationCordinator<TRepo, TAgg> : IRehydrationCoordinator<TRepo, TAgg>, IAsyncDisposable
+    public class TimedRehydrationCordinator<TRepo, TAgg> : IRehydrationCoordinator<TRepo, TAgg>, IAsyncDisposable
         where TRepo : IRepository<TAgg> where TAgg : AggregateRoot
     {
         private readonly TimeSpan _triggerInterval;
