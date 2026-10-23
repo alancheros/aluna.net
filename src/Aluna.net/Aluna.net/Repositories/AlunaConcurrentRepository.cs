@@ -36,22 +36,9 @@ public class AlunaConcurrentRepository<TAggregate> : IRepository<TAggregate> whe
         _innerRepository.RefreshMemoryCache();
     }
 
-    public HydrationSummary RehydrateFromStoreIndex(long storeIndex)
+    public Task<HydrationSummary> RehydrateFromStoreAsync(CancellationToken cancellationToken = default)
     {
-        _saveAndRehydrateLock.Wait();
-        try
-        {
-            return _innerRepository.RehydrateFromStoreIndex(storeIndex);
-        }
-        finally
-        {
-            _saveAndRehydrateLock.Release();
-        }
-    }
-
-    public Task<HydrationSummary> RehydrateFromStoreIndexAsync(long storeIndex, CancellationToken cancellationToken = default)
-    {
-        return RehydrateWithLockAsync(storeIndex, cancellationToken);
+        return _innerRepository.RehydrateFromStoreAsync(cancellationToken);
     }
 
     public void Save(AggregateRoot aggregate, long expectedAggregateSequence)
@@ -73,23 +60,12 @@ public class AlunaConcurrentRepository<TAggregate> : IRepository<TAggregate> whe
     }
 
 
-    private async Task<HydrationSummary> RehydrateWithLockAsync(long storeIndex, CancellationToken cancellationToken)
-    {
-        await _saveAndRehydrateLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            return await _innerRepository.RehydrateFromStoreIndexAsync(storeIndex, cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            _saveAndRehydrateLock.Release();
-        }
-    }
-
     public void SetCreateInstanceFunc(Func<TAggregate> createInstanceFunc) => _innerRepository.SetCreateInstanceFunc(createInstanceFunc);
 
     public long GetFirstIndexOfDate(DateTime dateTime)
     {
         return _innerRepository.GetFirstIndexOfDate(dateTime);
     }
+
+    public void SetRehydrationStart(DateTimeOffset dateTimeOffset) => _innerRepository.SetRehydrationStart(dateTimeOffset);
 }

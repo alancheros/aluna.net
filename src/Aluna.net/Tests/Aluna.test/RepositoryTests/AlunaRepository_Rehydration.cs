@@ -10,7 +10,7 @@ namespace Aluna.test.RepositoryTests;
 public class AlunaRepository_Rehydration
 {
     [Fact]
-    public void RehydrateFromStoreIndex_WhenValidEventsExist_ShouldHydrateAggregatesAndReturnSummary()
+    public async Task RehydrateFromStoreIndex_WhenValidEventsExist_ShouldHydrateAggregatesAndReturnSummary()
     {
         var eventStore = new InMemoryEventStore();
         var repository = new AccountRepository(eventStore);
@@ -31,7 +31,7 @@ public class AlunaRepository_Rehydration
             new TransactionEvent(-2m){ StoreSequence = 3L }
         ]);
 
-        var summary = repository.RehydrateFromStoreIndex(-1);
+        var summary = await repository.RehydrateFromStoreAsync();
 
         summary.ProcessedEvents.Should().Be(5);
         summary.HydratedAggregates.Should().Be(2);
@@ -43,7 +43,7 @@ public class AlunaRepository_Rehydration
     }
 
     [Fact]
-    public void RehydrateFromStoreIndex_WhenAggregateAlreadyExistsInRepository_ShouldReuseExistingAggregate()
+    public async Task RehydrateFromStoreIndex_WhenAggregateAlreadyExistsInRepository_ShouldReuseExistingAggregate()
     {
         var eventStore = new InMemoryEventStore();
         var repository = new AccountRepository(eventStore);
@@ -59,7 +59,7 @@ public class AlunaRepository_Rehydration
         existingAggregate.ApplyEvent(new AccountCreatedEvent(accountId));
         repository.Attach(existingAggregate);
 
-        var summary = repository.RehydrateFromStoreIndex(-1);
+        var summary = await repository.RehydrateFromStoreAsync();
 
         summary.ProcessedEvents.Should().Be(2);
         summary.HydratedAggregates.Should().Be(1);
@@ -72,7 +72,7 @@ public class AlunaRepository_Rehydration
     }
 
     [Fact]
-    public void RehydrateFromStoreIndex_WhenAggregateWasNotCreated_ShouldSkipEvents()
+    public async Task RehydrateFromStoreIndex_WhenAggregateWasNotCreated_ShouldSkipEvents()
     {
         var eventStore = new InMemoryEventStore();
         var repository = new AccountRepository(eventStore);
@@ -83,7 +83,7 @@ public class AlunaRepository_Rehydration
             new TransactionEvent(25m)
         ]);
 
-        var summary = repository.RehydrateFromStoreIndex(-1);
+        var summary = await repository.RehydrateFromStoreAsync();
 
         summary.ProcessedEvents.Should().Be(1);
         summary.HydratedAggregates.Should().Be(0);
@@ -92,19 +92,20 @@ public class AlunaRepository_Rehydration
     }
 
     [Fact]
-    public void RehydrateFromStoreIndex_WhenStoreIndexIsProvided_ShouldReadExclusivelyAfterThatIndex()
+    public async Task RehydrateFromStoreIndex_WhenStoreIndexIsProvided_ShouldReadExclusivelyAfterThatIndex()
     {
         var eventStore = new InMemoryEventStore();
         var repository = new AccountRepository(eventStore);
+        repository.SetRehydrationStart(DateTimeOffset.UtcNow);
 
         var accountId = Guid.NewGuid();
         eventStore.AppendEvents(new AggregateStreamKey(Account.STREAM_NAME, accountId),
         [
-            new AccountCreatedEvent(accountId),
+            new AccountCreatedEvent(accountId){ EventTimestamp = DateTime.UtcNow.AddDays(-1)}    ,
             new TransactionEvent(100m)
         ]);
 
-        var summary = repository.RehydrateFromStoreIndex(1);
+        var summary = await repository.RehydrateFromStoreAsync();
 
         summary.ProcessedEvents.Should().Be(1);
         summary.HydratedAggregates.Should().Be(0);
@@ -113,7 +114,7 @@ public class AlunaRepository_Rehydration
     }
 
     [Fact]
-    public void RehydrateFromStoreIndex_ShouldReadOnlyRepositoryStream()
+    public async Task RehydrateFromStoreIndex_ShouldReadOnlyRepositoryStream()
     {
         var eventStore = new InMemoryEventStore();
         var repository = new AccountRepository(eventStore);
@@ -132,7 +133,7 @@ public class AlunaRepository_Rehydration
             new AccountCreatedEvent(otherStreamAggregateId)
         ]);
 
-        var summary = repository.RehydrateFromStoreIndex(-1);
+        var summary = await repository.RehydrateFromStoreAsync();
 
         summary.ProcessedEvents.Should().Be(2);
         summary.HydratedAggregates.Should().Be(1);

@@ -13,6 +13,9 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
     // Control variable(s) for rehydration status
     private int _rehydrationInProgressCount;
+
+    private long storeIndex = long.MinValue;
+
     public bool IsRehydrating => Volatile.Read(ref _rehydrationInProgressCount) > 0;
 
     public virtual string StreamName => typeof(T).Name; //The stream name is the name of the aggregate type by default. Override this in derived classes if you want a different stream name.
@@ -21,6 +24,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
     private readonly List<T> createdAggregates = new();
 
     protected Func<T> CreateInstance = () => (T)Activator.CreateInstance(typeof(T), true)!;
+    private DateTimeOffset rehydrationDateTimeStart;
 
     public T MakeNew()
     {
@@ -81,20 +85,26 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
     public void Attach(AggregateRoot aggregate) => aggregates.Add(aggregate.StreamKey.AggregateId, (T)aggregate);
 
-    public HydrationSummary RehydrateFromStoreIndex(long storeIndex)
+    private HydrationSummary RehydrateFromStoreIndex()
     {
+
         Interlocked.Increment(ref _rehydrationInProgressCount);
         try
         {
             long processedEvents = 0;
             long skippedEvents = 0;
             int hydratedAggregates = 0;
-            long lastScannedStoreIndex = storeIndex + 1;
 
             if (storeIndex == long.MaxValue)
             {
                 return new HydrationSummary(0, 0, 0, long.MaxValue);
             }
+            else if (storeIndex == long.MinValue)
+            {
+                storeIndex = _eventStore.GetFirstStoreSequenceByDate(rehydrationDateTimeStart.UtcDateTime) - 1;
+            }
+
+            long lastScannedStoreIndex = storeIndex + 1;
 
             while (true)
             {
@@ -152,9 +162,9 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
         }
     }
 
-    public Task<HydrationSummary> RehydrateFromStoreIndexAsync(long storeIndex, CancellationToken cancellationToken = default)
+    public Task<HydrationSummary> RehydrateFromStoreAsync(CancellationToken cancellationToken = default)
     {
-        return Task.Run(() => RehydrateFromStoreIndex(storeIndex), cancellationToken);
+        return Task.Run(() => RehydrateFromStoreIndex(), cancellationToken);
     }
 
     private (bool isNew, AggregateRoot) GetOrCreateInstance(Guid key)
@@ -217,6 +227,11 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
     }
 
     public long GetFirstIndexOfDate(DateTime dateTime) => _eventStore.GetFirstStoreSequenceByDate(dateTime);
+
+    public void SetRehydrationStart(DateTimeOffset dateTimeOffset)
+    {
+        rehydrationDateTimeStart = dateTimeOffset;
+    }
 
     public AlunaRepository(IAlunaEventStore eventStore)
     {
