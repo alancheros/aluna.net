@@ -361,6 +361,10 @@ public partial class SqlServerEventStore : IAlunaEventStore
 
     public long GetFirstStoreSequenceByDate(DateTimeOffset dateTime)
     {
+        if(dateTime == DateTimeOffset.MinValue)
+        {
+            dateTime = DateTimeOffset.UtcNow.AddYears(-10); // Default to 10 years ago if no date is provided
+        }
         dateTime = dateTime.Date;
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
