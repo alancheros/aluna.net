@@ -16,7 +16,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
     private long storeIndex = long.MinValue;
 
-    public bool IsRehydrating =>  false;
+    public bool IsRehydrationInProgress => Volatile.Read(ref _rehydrationInProgressCount) > 0;
 
     public virtual string StreamName => typeof(T).Name; //The stream name is the name of the aggregate type by default. Override this in derived classes if you want a different stream name.
 
@@ -215,7 +215,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
 
     public async Task WaitForRehydrationWorkersAsync(CancellationToken cancellationToken = default)
     {
-        while (IsRehydrating)
+        while (IsRehydrationInProgress)
         {
             await Task.Delay(25, cancellationToken).ConfigureAwait(false);
         }

@@ -11,6 +11,8 @@ public class AlunaConcurrentRepository<TAggregate> : IRepository<TAggregate> whe
 
     public string StreamName => _innerRepository.StreamName;
 
+    public bool IsRehydrationInProgress => _innerRepository.IsRehydrationInProgress;
+
     public AlunaConcurrentRepository(AlunaRepository<TAggregate> innerRepository)
     {
         _innerRepository = innerRepository ?? throw new ArgumentNullException(nameof(innerRepository));

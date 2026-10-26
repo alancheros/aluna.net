@@ -68,4 +68,9 @@ public interface IRepository<T> where T : AggregateRoot
     /// <param name="dateTime">The date to locate.</param>
     /// <returns>The first index associated with the specified date.</returns>
     long GetFirstIndexOfDate(DateTime dateTime);
+
+    /// <summary>
+    /// Gets a value indicating whether rehydration is currently in progress.
+    /// </summary>
+    bool IsRehydrationInProgress { get; }
 }
