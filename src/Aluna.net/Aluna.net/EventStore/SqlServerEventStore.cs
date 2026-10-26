@@ -157,7 +157,7 @@ public partial class SqlServerEventStore : IAlunaEventStore
             FROM {_qualifiedTableName}
             WHERE [StreamName] = @StreamName
                 AND [EventSequenceId] >= @FromStoreSequence
-            ORDER BY [AggregateSequence] ASC, [EventSequenceId] ASC;
+            ORDER BY [EventSequenceId] ASC;
             """;
 
         using var connection = OpenConnection();
