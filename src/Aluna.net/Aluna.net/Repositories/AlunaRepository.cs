@@ -154,6 +154,7 @@ public class AlunaRepository<T> : IRepository<T> where T : AggregateRoot
             }
 
             lastScannedStoreIndex--;
+            storeIndex  = lastScannedStoreIndex;
             return new HydrationSummary(processedEvents, hydratedAggregates, skippedEvents, lastScannedStoreIndex);
         }
         finally

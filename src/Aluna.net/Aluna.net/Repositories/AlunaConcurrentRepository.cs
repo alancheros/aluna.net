@@ -40,7 +40,15 @@ public class AlunaConcurrentRepository<TAggregate> : IRepository<TAggregate> whe
 
     public Task<HydrationSummary> RehydrateFromStoreAsync(CancellationToken cancellationToken = default)
     {
-        return _innerRepository.RehydrateFromStoreAsync(cancellationToken);
+        _saveAndRehydrateLock.Wait(cancellationToken);
+        try
+        {
+            return _innerRepository.RehydrateFromStoreAsync(cancellationToken);
+        }
+        finally
+        {
+            _saveAndRehydrateLock.Release();
+        }
     }
 
     public void Save(AggregateRoot aggregate, long expectedAggregateSequence)
@@ -58,7 +66,16 @@ public class AlunaConcurrentRepository<TAggregate> : IRepository<TAggregate> whe
 
     public Task WaitForRehydrationWorkersAsync(CancellationToken cancellationToken = default)
     {
-        return _innerRepository.WaitForRehydrationWorkersAsync(cancellationToken);
+        _saveAndRehydrateLock.Wait(cancellationToken);
+        try
+        {
+
+            return _innerRepository.WaitForRehydrationWorkersAsync(cancellationToken);
+        }
+        finally
+        {
+            _saveAndRehydrateLock.Release();
+        }
     }
 
 
